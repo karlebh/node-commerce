@@ -8,12 +8,14 @@ datasource db {
 
 model User {
   id           String   @id @default(cuid())
-  name         String
+  username     String
   email        String   @unique
   passwordHash String
   products     Product[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@map("users")
 }
 
 model Product {
@@ -25,10 +27,25 @@ model Product {
   stock       Int      @default(0)
   imageUrl    String?
   isActive    Boolean  @default(true)
-
   userId      String 
+  categoryId  String 
   user        User @relation(fields: [userId], references: [id])
-
+  category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("products")
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model Category {
+ id          String   @id @default(cuid())
+ name        String @unique
+ slug        String @unique
+ products    Product[]
+ createdAt   DateTime @default(now())
+ updatedAt   DateTime @updatedAt
+
+ @@map("categories")
 }

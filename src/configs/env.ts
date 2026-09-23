@@ -1,5 +1,6 @@
 import "dotenv/config"
 import { z } from "zod"
+import type { StringValue } from "ms"
 
 const envSchema = z.object({
 	NODE_ENV: z
@@ -11,6 +12,7 @@ const envSchema = z.object({
 		.string()
 		.min(32)
 		.default("development-only-secret-change-me-123456"),
+	JWT_EXPIRES_IN: z.custom<StringValue>(),
 	FRONTEND_URL: z.string().url().default("http://localhost:5173"),
 })
 

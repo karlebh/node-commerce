@@ -5,22 +5,18 @@ import { AppError } from "../errors/AppError.js"
 import {
 	createProductSchema,
 	updateProductSchema,
-} from "../models/product.schemas.js"
+} from "../validations/product.schemas.js"
+import { urlQuerySchema } from "../validations/url-query.schema.js"
+import { paginate } from "../lib/paginate.js"
 
 export const index: RequestHandler = async (request, response) => {
-	const page = Math.max(Number(request.query.page) || 1, 1)
-	const perPage = Math.min(
-		Math.max(Number(request.query.perPage) || 12, 1),
-		50
-	)
-	const search =
-		typeof request.query.search === "string"
-			? request.query.search
-			: undefined
+	const { page, perPage, search } = urlQuerySchema.parse(request.query)
+
 	const where = {
 		isActive: true,
 		...(search ? { name: { contains: search } } : {}),
 	}
+
 	const [products, total] = await Promise.all([
 		prisma.product.findMany({
 			where,
@@ -30,14 +26,21 @@ export const index: RequestHandler = async (request, response) => {
 		}),
 		prisma.product.count({ where }),
 	])
-	response.json({
-		data: products,
-		meta: { page, perPage, total, lastPage: Math.ceil(total / perPage) },
-	})
+
+	return response.status(200).json(
+		paginate({
+			request,
+			data: products,
+			total,
+			page,
+			perPage,
+		})
+	)
 }
 
 export const show: RequestHandler = async (request, response) => {
 	const slug = request.params.slug
+
 	if (typeof slug !== "string") throw new AppError(404, "Product not found")
 
 	const product = await prisma.product.findUnique({ where: { slug } })
@@ -49,40 +52,44 @@ export const show: RequestHandler = async (request, response) => {
 }
 
 export const store: RequestHandler = async (request, response) => {
-	const input = createProductSchema.parse(request.body)
+	const { imageUrl, categoryId, ...productFields } =
+		createProductSchema.parse(request.body)
+	const userId = `848478-hfhfhf`
 
-	const { imageUrl, ...productFields } = input
-	const data: Prisma.ProductCreateInput =
-		imageUrl === undefined ? productFields : { ...productFields, imageUrl }
+	const data: Prisma.ProductCreateInput = {
+		...productFields,
+		...(imageUrl !== undefined && { imageUrl }),
+		user: { connect: { id: userId } },
+		category: { connect: { id: categoryId } },
+	}
+
 	const product = await prisma.product.create({ data })
 	response.status(201).json({ data: product })
 }
 
 export const update: RequestHandler = async (request, response) => {
 	const input = updateProductSchema.parse(request.body)
+
 	const id = request.params.id
 	if (typeof id !== "string") throw new AppError(404, "Product not found")
+
 	const data = Object.fromEntries(
 		Object.entries(input).filter(([, value]) => value !== undefined)
 	) as Prisma.ProductUpdateInput
-	try {
-		const product = await prisma.product.update({ where: { id }, data })
-		response.json({ data: product })
-	} catch {
-		throw new AppError(404, "Product not found")
-	}
+
+	const product = await prisma.product.update({ where: { id }, data })
+	response.status(200).json({ data: product })
 }
 
 export const destroy: RequestHandler = async (request, response) => {
 	const id = request.params.id
+
 	if (typeof id !== "string") throw new AppError(404, "Product not found")
-	try {
-		await prisma.product.update({
-			where: { id },
-			data: { isActive: false },
-		})
-		response.status(204).send()
-	} catch {
-		throw new AppError(404, "Product not found")
-	}
+
+	await prisma.product.update({
+		where: { id },
+		data: { isActive: false },
+	})
+
+	response.status(204).send()
 }

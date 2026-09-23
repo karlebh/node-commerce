@@ -10,6 +10,7 @@ export const createProductSchema = z.object({
 	price: z.number().int().nonnegative(),
 	stock: z.number().int().nonnegative().default(0),
 	imageUrl: z.string().url().optional(),
+	categoryId: z.string(),
 })
 
 export const updateProductSchema = createProductSchema.partial()
