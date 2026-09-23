@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   passwordHash String
   products     Product[]
+  session      Session[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -48,4 +49,16 @@ model Category {
  updatedAt   DateTime @updatedAt
 
  @@map("categories")
+}
+
+model Session {
+  id        String    @id @default(cuid())     
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -5,6 +5,9 @@ declare global {
 		interface Request {
 			userId?: string
 			record?: Record<string, unknown>
+			sessionId?: string
 		}
 	}
 }
+
+export {}

@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import type { RequestHandler } from "express"
+import { response, type RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 import { env } from "../configs/env.js"
 import { prisma } from "../database/prisma.js"
@@ -8,18 +8,7 @@ import {
 	loginUserSchema,
 	registerUserSchema,
 } from "../validations/user.schemas.js"
-
-const publicUser = (user: {
-	id: string
-	username: string
-	email: string
-	createdAt: Date
-}) => ({
-	id: user.id,
-	username: user.username,
-	email: user.email,
-	createdAt: user.createdAt,
-})
+import { createSessionAndToken, publicUser } from "../helpers/index.js"
 
 export const register: RequestHandler = async (request, response) => {
 	const input = registerUserSchema.parse(request.body)
@@ -37,10 +26,7 @@ export const register: RequestHandler = async (request, response) => {
 		},
 	})
 
-	const token = jwt.sign({}, env.JWT_SECRET, {
-		subject: user.id,
-		expiresIn: env.JWT_EXPIRES_IN,
-	})
+	const token = await createSessionAndToken(user.id)
 
 	return response
 		.status(201)
@@ -55,13 +41,24 @@ export const login: RequestHandler = async (request, response) => {
 		throw new AppError(401, "Invalid email or password")
 	}
 
-	const token = jwt.sign({}, env.JWT_SECRET, {
-		subject: user.id,
-		expiresIn: env.JWT_EXPIRES_IN,
-	})
+	const token = await createSessionAndToken(user.id)
+
 	return response
 		.status(200)
 		.json({ data: { user: publicUser(user), token } })
+}
+
+export const logout: RequestHandler = async (request, response) => {
+	const sessionId = request.sessionId
+
+	if (sessionId) {
+		await prisma.session.update({
+			where: { id: sessionId },
+			data: { revokedAt: new Date() },
+		})
+	}
+
+	return response.status(204).send()
 }
 
 export const me: RequestHandler = async (request, response) => {
@@ -69,6 +66,9 @@ export const me: RequestHandler = async (request, response) => {
 	if (!userId) throw new AppError(401, "Authentication required")
 	const user = await prisma.user.findUnique({ where: { id: userId } })
 	if (!user) throw new AppError(404, "User not found")
+	const token = await createSessionAndToken(user.id)
 
-	return response.status(200).json({ data: { user: publicUser(user) } })
+	return response
+		.status(200)
+		.json({ data: { user: publicUser(user), token } })
 }
