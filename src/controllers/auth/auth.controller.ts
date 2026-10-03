@@ -3,10 +3,14 @@ import { response, type RequestHandler } from "express"
 import { prisma } from "../../database/prisma.js"
 import { AppError } from "../../errors/AppError.js"
 import {
+	changePasswordSchema,
 	loginUserSchema,
 	registerUserSchema,
-} from "../../validations/user.schemas.js"
+	resetPasswordSchema,
+} from "../../validations/auth.schemas.js"
 import { createSessionAndToken, publicUser } from "../../helpers/index.js"
+import { request } from "http"
+import { createHash, randomBytes } from "crypto"
 
 export const register: RequestHandler = async (request, response) => {
 	registerUserSchema.parse(request.body)
@@ -44,9 +48,10 @@ export const login: RequestHandler = async (request, response) => {
 
 	const token = await createSessionAndToken(user.id)
 
-	return response
-		.status(200)
-		.json({ data: { user: publicUser(user), token } })
+	return response.status(200).json({
+		message: "Login successful",
+		data: { user: publicUser(user), token },
+	})
 }
 
 export const logout: RequestHandler = async (request, response) => {
@@ -59,10 +64,63 @@ export const logout: RequestHandler = async (request, response) => {
 		})
 	}
 
-	return response.status(204).send()
+	return response.status(200).json({ message: "Logout successful" })
 }
 
-export const resetPassword: RequestHandler = async (request, response) => {}
+export const changePassword: RequestHandler = async (request, response) => {
+	const { current_password, password } = changePasswordSchema.parse(
+		request.body
+	)
+
+	const user = await prisma.user.findUnique({
+		where: { id: request.userId! },
+	})
+
+	if (!user) throw new AppError(404, "Error fetching user")
+
+	const isCurrentPasswordValid = await bcrypt.compare(
+		current_password,
+		user.passwordHash
+	)
+
+	if (!isCurrentPasswordValid) {
+		throw new AppError(401, "Current password is incorrect")
+	}
+
+	const passwordHash = await bcrypt.hash(password, 12)
+
+	await prisma.user.update({
+		where: { id: user.id },
+		data: { passwordHash },
+	})
+
+	return response.status(200).json({
+		message: "Password updated successfully",
+	})
+}
+
+export const resetPassword: RequestHandler = async (request, response) => {
+	const { email } = resetPasswordSchema.parse(request.body)
+
+	const user = await prisma.user.findUnique({
+		where: { email: email },
+	})
+
+	if (!user) throw new AppError(404, "User not found")
+
+	const token = randomBytes(32).toString("hex")
+	const tokenHash = createHash("sha256").update(token).digest("hex")
+
+	await prisma.passwordResetToken.create({
+		data: {
+			email: user.email,
+			tokenHash,
+			expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+		},
+	})
+
+	// send email to user
+}
 
 export const me: RequestHandler = async (request, response) => {
 	const userId = request.userId

@@ -14,12 +14,13 @@ import {
 	update as updateCategory,
 } from "../controllers/category.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
-import { requiresAuth } from "../middleware/auth.js"
+import { requiresAuth } from "../middleware/requiresAuth.js"
 import {
 	login,
 	logout,
 	me,
 	register,
+	resetPassword,
 } from "../controllers/auth/auth.controller.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { prisma } from "../database/prisma.js"
@@ -42,11 +43,12 @@ productRouter.delete(
 	asyncHandler(destroyProduct)
 )
 
-export const userRouter = Router()
-userRouter.post("/register", requiresGuest, asyncHandler(register))
-userRouter.post("/login", requiresGuest, asyncHandler(login))
-userRouter.post("/logout", requiresAuth, asyncHandler(logout))
-userRouter.get("/me", requiresAuth, asyncHandler(me))
+export const authRouter = Router()
+authRouter.post("/register", requiresGuest, asyncHandler(register))
+authRouter.post("/login", requiresGuest, asyncHandler(login))
+authRouter.post("/reset-password", requiresGuest, asyncHandler(resetPassword))
+authRouter.get("/me", requiresAuth, asyncHandler(me))
+authRouter.post("/logout", requiresAuth, asyncHandler(logout))
 
 export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
