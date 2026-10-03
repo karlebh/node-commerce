@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import Handlebars from "handlebars"
 import nodemailer from "nodemailer"
+import { fileURLToPath } from "node:url"
 
 const transporter = nodemailer.createTransport({
 	host: process.env.SMTP_HOST,
@@ -11,6 +12,9 @@ const transporter = nodemailer.createTransport({
 		pass: process.env.SMTP_PASS,
 	},
 })
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const loadTemplate = (name: string) => {
 	const source = fs.readFileSync(

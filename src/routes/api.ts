@@ -20,11 +20,11 @@ import {
 	logout,
 	me,
 	register,
-	resetPassword,
 } from "../controllers/auth/auth.controller.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { prisma } from "../database/prisma.js"
 import { requiresGuest } from "../middleware/requiresGuest.js"
+import { resetPassword } from "../controllers/auth/passwors_reset.controller.js"
 
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))

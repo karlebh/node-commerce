@@ -7,7 +7,7 @@ import {
 	registerUserSchema,
 } from "../../validations/auth.schemas.js"
 import { createSessionAndToken, publicUser } from "../../helpers/index.js"
-import { sendRegisterEmail } from "../../emails/mailer.js"
+import { addEmailJob } from "../../jobs/emailQueue.js"
 
 export const register: RequestHandler = async (request, response) => {
 	registerUserSchema.parse(request.body)
@@ -28,7 +28,7 @@ export const register: RequestHandler = async (request, response) => {
 
 	const token = await createSessionAndToken(user.id)
 
-	await sendRegisterEmail(user.email, user.username)
+	await addEmailJob("register", { email: user.email, name: user.username })
 
 	return response
 		.status(201)

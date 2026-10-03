@@ -8,6 +8,7 @@ import { AppError } from "../../errors/AppError.js"
 import bcrypt from "bcryptjs"
 import { createHash, randomBytes } from "crypto"
 import { sendPasswordResetEmail } from "../../emails/mailer.js"
+import { addEmailJob } from "../../jobs/emailQueue.js"
 
 export const changePassword: RequestHandler = async (request, response) => {
 	const { current_password, password } = changePasswordSchema.parse(
@@ -64,7 +65,7 @@ export const resetPassword: RequestHandler = async (request, response) => {
 			},
 		})
 
-		await sendPasswordResetEmail(user.email, token)
+		await addEmailJob("password-reset", { email: user.email, token })
 	}
 
 	response.status(200).json({
