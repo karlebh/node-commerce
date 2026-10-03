@@ -1,18 +1,40 @@
 import pino from "pino"
-import { file } from "zod"
+import path from "node:path"
+
+const logDir = path.join(process.cwd(), "logs")
+
+const prettyOptions = {
+	translateTime: "dd/mm/yyyy HH:MM:ss",
+	messageFormat: "{msg}",
+	ignore: "pid,hostname",
+}
 
 export const logger = pino(
 	{
 		level: "info",
+		base: null,
+		timestamp: pino.stdTimeFunctions.isoTime,
 	},
-
 	pino.transport({
-		target: "pino-roll",
-		options: {
-			file: "./logs/app",
-			frequncy: "daily",
-			makdir: true,
-			limit: { count: 10 },
-		},
+		targets: [
+			{
+				target: "pino-pretty",
+				level: "info",
+				options: {
+					...prettyOptions,
+					colorize: true,
+				},
+			},
+			{
+				target: "pino-pretty",
+				level: "info",
+				options: {
+					...prettyOptions,
+					colorize: false,
+					destination: path.join(logDir, "app.log"),
+					mkdir: true,
+				},
+			},
+		],
 	})
 )

@@ -3,15 +3,13 @@ import jwt from "jsonwebtoken"
 import { env } from "../configs/env.js"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
+import type { AccessTokenPayload } from "../types/index.js"
 
-type AccessTokenPayload = {
-	sub: string
-	jti: string
-	iat: number
-	exp: number
-}
-
-export const requireAuth: RequestHandler = async (request, _response, next) => {
+export const requiresAuth: RequestHandler = async (
+	request,
+	_response,
+	next
+) => {
 	try {
 		const header = request.headers.authorization
 		if (!header?.startsWith("Bearer ")) {
@@ -31,19 +29,16 @@ export const requireAuth: RequestHandler = async (request, _response, next) => {
 			throw new AppError(401, "Malformed token")
 		}
 
-		// 2. Stateful check: session must exist, be live, and belong to the sub.
 		const session = await prisma.session.findUnique({
 			where: { id: payload.jti },
 		})
 
 		if (!session) throw new AppError(401, "Session not found")
 		if (session.revokedAt) throw new AppError(401, "Session revoked")
-		if (session.expiresAt < new Date()) {
+		if (session.expiresAt < new Date())
 			throw new AppError(401, "Session expired")
-		}
-		if (session.userId !== payload.sub) {
+		if (session.userId !== payload.sub)
 			throw new AppError(401, "Invalid session")
-		}
 
 		request.userId = session.userId
 		request.sessionId = session.id

@@ -4,7 +4,7 @@ type Delegate = {
 	findUnique(args: { where: { id: string } }): PromiseLike<unknown>
 }
 
-export const requireOwnership =
+export const requiresOwnership =
 	(model: Delegate, ownerField = "userId"): RequestHandler =>
 	async (request, response, next) => {
 		try {

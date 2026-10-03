@@ -1,32 +1,33 @@
 import bcrypt from "bcryptjs"
 import { response, type RequestHandler } from "express"
-import jwt from "jsonwebtoken"
-import { env } from "../configs/env.js"
-import { prisma } from "../database/prisma.js"
-import { AppError } from "../errors/AppError.js"
+import { prisma } from "../../database/prisma.js"
+import { AppError } from "../../errors/AppError.js"
 import {
 	loginUserSchema,
 	registerUserSchema,
-} from "../validations/user.schemas.js"
-import { createSessionAndToken, publicUser } from "../helpers/index.js"
+} from "../../validations/user.schemas.js"
+import { createSessionAndToken, publicUser } from "../../helpers/index.js"
 
 export const register: RequestHandler = async (request, response) => {
-	const input = registerUserSchema.parse(request.body)
+	registerUserSchema.parse(request.body)
+
+	const { username, email, password } = request.body
 
 	const existing = await prisma.user.findUnique({
-		where: { email: input.email },
+		where: { email },
 	})
 
-	if (existing) throw new AppError(409, "Email is already registered")
+	if (existing) throw new AppError(409, "User already exists")
+
+	const passwordHash = await bcrypt.hash(password, 12)
 
 	const user = await prisma.user.create({
-		data: {
-			...input,
-			passwordHash: await bcrypt.hash(input.password, 12),
-		},
+		data: { username, email, passwordHash },
 	})
 
 	const token = await createSessionAndToken(user.id)
+
+	//email user
 
 	return response
 		.status(201)
@@ -60,6 +61,8 @@ export const logout: RequestHandler = async (request, response) => {
 
 	return response.status(204).send()
 }
+
+export const resetPassword: RequestHandler = async (request, response) => {}
 
 export const me: RequestHandler = async (request, response) => {
 	const userId = request.userId

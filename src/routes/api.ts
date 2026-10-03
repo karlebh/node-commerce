@@ -14,46 +14,53 @@ import {
 	update as updateCategory,
 } from "../controllers/category.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
-import { requireAuth } from "../middleware/auth.js"
-import { login, me, register } from "../controllers/user.controller.js"
-import { requireOwnership } from "../middleware/requireOwnership.js"
+import { requiresAuth } from "../middleware/auth.js"
+import {
+	login,
+	logout,
+	me,
+	register,
+} from "../controllers/auth/auth.controller.js"
+import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { prisma } from "../database/prisma.js"
+import { requiresGuest } from "../middleware/requiresGuest.js"
 
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
 productRouter.get("/:slug", asyncHandler(showProduct))
-productRouter.post("/", requireAuth, asyncHandler(storeProduct))
+productRouter.post("/", requiresAuth, asyncHandler(storeProduct))
 productRouter.patch(
 	"/:id",
-	requireAuth,
-	requireOwnership(prisma.product),
+	requiresAuth,
+	requiresOwnership(prisma.product),
 	asyncHandler(updateProduct)
 )
 productRouter.delete(
 	"/:id",
-	requireAuth,
-	requireOwnership(prisma.product),
+	requiresAuth,
+	requiresOwnership(prisma.product),
 	asyncHandler(destroyProduct)
 )
 
 export const userRouter = Router()
-userRouter.post("/register", asyncHandler(register))
-userRouter.post("/login", asyncHandler(login))
-userRouter.get("/me", requireAuth, asyncHandler(me))
+userRouter.post("/register", requiresGuest, asyncHandler(register))
+userRouter.post("/login", requiresGuest, asyncHandler(login))
+userRouter.post("/logout", requiresAuth, asyncHandler(logout))
+userRouter.get("/me", requiresAuth, asyncHandler(me))
 
 export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
 categoryRouter.get("/:name", asyncHandler(showCategory))
-categoryRouter.post("/", requireAuth, asyncHandler(storeCategory))
+categoryRouter.post("/", requiresAuth, asyncHandler(storeCategory))
 categoryRouter.patch(
 	"/:name",
-	requireAuth,
-	requireOwnership(prisma.category),
+	requiresAuth,
+	requiresOwnership(prisma.category),
 	asyncHandler(updateCategory)
 )
 categoryRouter.delete(
 	"/:name",
-	requireAuth,
-	requireOwnership(prisma.category),
+	requiresAuth,
+	requiresOwnership(prisma.category),
 	asyncHandler(destroyCategory)
 )
