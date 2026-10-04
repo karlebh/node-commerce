@@ -49,3 +49,18 @@ export async function sendRegisterEmail(email: string, name: string) {
 		html: registerTemplate({ name, loginUrl }),
 	})
 }
+
+const resetPasswordSuccessTemplate = loadTemplate("reset-password-success")
+
+export async function sendResetPasswordSuccessEmail(
+	email: string,
+	username: string,
+	appName: string
+) {
+	await transporter.sendMail({
+		from: process.env.MAIL_FROM,
+		to: email,
+		subject: "Reset Password Successful!",
+		html: resetPasswordSuccessTemplate({ username, appName }),
+	})
+}

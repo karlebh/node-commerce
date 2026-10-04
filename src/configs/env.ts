@@ -23,6 +23,7 @@ const envSchema = z.object({
 	JWT_EXPIRES_IN: msString.default("15m" as StringValue),
 	SESSION_TTL_MS: z.coerce.number().int().positive().default(604800000),
 	FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+	APP_NAME: z.string(),
 })
 
 export const env = envSchema.parse(process.env)

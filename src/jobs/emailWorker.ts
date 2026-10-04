@@ -1,5 +1,9 @@
 import { Worker } from "bullmq"
-import { sendPasswordResetEmail, sendRegisterEmail } from "../emails/mailer.js"
+import {
+	sendPasswordResetEmail,
+	sendRegisterEmail,
+	sendResetPasswordSuccessEmail,
+} from "../emails/mailer.js"
 import { connection } from "./connection.js"
 import type { EmailJobs } from "./emailQueue.js"
 
@@ -15,6 +19,12 @@ export const emailWorker = new Worker(
 			case "register": {
 				const { email, name } = job.data as EmailJobs["register"]
 				await sendRegisterEmail(email, name)
+				break
+			}
+			case "password-reset-success": {
+				const { email, name, appName } =
+					job.data as EmailJobs["password-reset-success"]
+				await sendResetPasswordSuccessEmail(email, name, appName)
 				break
 			}
 		}

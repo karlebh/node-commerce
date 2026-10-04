@@ -4,6 +4,11 @@ import { connection } from "./connection.js"
 export type EmailJobs = {
 	"password-reset": { email: string; token: string }
 	register: { email: string; name: string }
+	"password-reset-success": {
+		email: string
+		name: string
+		appName: string
+	}
 }
 
 export const emailQueue = new Queue("email", {

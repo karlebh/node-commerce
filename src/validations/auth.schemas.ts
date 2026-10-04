@@ -1,4 +1,4 @@
-import { email, z } from "zod"
+import { z } from "zod"
 
 const baseRegisterSchema = z.object({
 	username: z.string().trim().min(2).max(20),
@@ -35,4 +35,20 @@ export const changePasswordSchema = z
 	.refine((data) => data.password !== data.current_password, {
 		message: "New password must be different from the current one",
 		path: ["password"],
+	})
+
+export const confirmPasswordResetSchema = z
+	.object({
+		token: z.string().min(64, "Reset token is required"),
+		password: z
+			.string()
+			.min(8, "Password must be at least 8 characters")
+			.max(72, "Password must not exceed 72 characters"),
+		passwordConfirmation: z
+			.string()
+			.min(1, "Password confirmation is required"),
+	})
+	.refine((data) => data.password === data.passwordConfirmation, {
+		message: "Passwords do not match",
+		path: ["passwordConfirmation"],
 	})

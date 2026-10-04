@@ -1,14 +1,15 @@
 import type { RequestHandler } from "express"
 import {
 	changePasswordSchema,
+	confirmPasswordResetSchema,
 	resetPasswordSchema,
 } from "../../validations/auth.schemas.js"
 import { prisma } from "../../database/prisma.js"
 import { AppError } from "../../errors/AppError.js"
 import bcrypt from "bcryptjs"
 import { createHash, randomBytes } from "crypto"
-import { sendPasswordResetEmail } from "../../emails/mailer.js"
 import { addEmailJob } from "../../jobs/emailQueue.js"
+import { env } from "../../configs/env.js"
 
 export const changePassword: RequestHandler = async (request, response) => {
 	const { current_password, password } = changePasswordSchema.parse(
@@ -53,16 +54,18 @@ export const resetPassword: RequestHandler = async (request, response) => {
 		const token = randomBytes(32).toString("hex")
 		const tokenHash = createHash("sha256").update(token).digest("hex")
 
-		await prisma.passwordResetToken.deleteMany({
-			where: { email: user.email },
-		})
+		await prisma.$transaction(async (tx) => {
+			await tx.passwordResetToken.deleteMany({
+				where: { email: user.email },
+			})
 
-		await prisma.passwordResetToken.create({
-			data: {
-				email: user.email,
-				tokenHash,
-				expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-			},
+			await tx.passwordResetToken.create({
+				data: {
+					email: user.email,
+					tokenHash,
+					expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+				},
+			})
 		})
 
 		await addEmailJob("password-reset", { email: user.email, token })
@@ -72,4 +75,44 @@ export const resetPassword: RequestHandler = async (request, response) => {
 		message:
 			"If an account with that email exists, a reset link has been sent.",
 	})
+}
+
+export const confirmPasswordReset: RequestHandler = async (
+	request,
+	response
+) => {
+	const { token } = confirmPasswordResetSchema.parse(request.params)
+	const { password } = confirmPasswordResetSchema.parse(request.body)
+
+	const tokenHash = createHash("sha256").update(token).digest("hex")
+
+	const resetToken = await prisma.passwordResetToken.findFirst({
+		where: { tokenHash, expiresAt: { gt: new Date() } },
+	})
+
+	if (!resetToken)
+		throw new AppError(400, "Invalid or expired password reset token")
+
+	const passwordHash = await bcrypt.hash(password, 12)
+
+	const user = await prisma.$transaction(async (tx) => {
+		const user = await tx.user.update({
+			where: { email: resetToken.email },
+			data: { passwordHash },
+		})
+
+		await tx.passwordResetToken.delete({
+			where: { id: resetToken.id },
+		})
+
+		return user
+	})
+
+	await addEmailJob("password-reset-success", {
+		email: user.email,
+		name: user.username,
+		appName: env.APP_NAME,
+	})
+
+	return response.status(200).json({ message: "Passord reset successfully" })
 }
