@@ -32,3 +32,25 @@ export const createSessionAndToken = async (userId: string) => {
 	})
 	return token
 }
+
+export type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+
+const polymorphicResolvers = {
+	User: (tx: Tx, id: string) => tx.user.findUnique({ where: { id } }),
+	Category: (tx: Tx, id: string) => tx.category.findUnique({ where: { id } }),
+	Product: (tx: Tx, id: string) => tx.product.findUnique({ where: { id } }),
+} as const
+
+export async function resolveImageable(
+	tx: Tx,
+	imageableType: string,
+	imageableId: string
+) {
+	const resolver =
+		polymorphicResolvers[imageableType as keyof typeof polymorphicResolvers]
+	if (!resolver) return null
+	return resolver(tx, imageableId)
+}
+
+export const isErrnoException = (err: unknown): err is NodeJS.ErrnoException =>
+	err instanceof Error && "code" in err

@@ -1,43 +1,60 @@
 import fs from "fs/promises"
 import path from "path"
-import type { RequestHandler } from "express"
+import type { Request, Response } from "express"
 import multer from "multer"
 import { uploader, UPLOAD_DIR } from "../configs/multer.js"
 import { prisma } from "../database/prisma.js"
 import { deleteImageSchema, imageSchema } from "../validations/media.schema.js"
 import { AppError } from "../errors/AppError.js"
 import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import { isErrnoException, resolveImageable } from "../helpers/index.js"
 
 const singleUpload = uploader.single("file")
 
-export const store: AuthenticatedHandler = (request, response) => {
-	singleUpload(request, response, async (err: unknown) => {
-		if (err instanceof multer.MulterError) {
-			response.status(400).json({ error: err.message })
-			return
-		}
+const runUpload = (request: Request, response: Response): Promise<void> =>
+	new Promise((resolve, reject) => {
+		singleUpload(request, response, (err: unknown) => {
+			if (err instanceof multer.MulterError) {
+				reject(new AppError(400, err.message))
+				return
+			}
 
-		if (err) {
-			response.status(500).json({ error: "Upload failed" })
-			return
-		}
+			if (err) {
+				reject(new AppError(500, "Upload failed"))
+				return
+			}
 
-		if (!request.file) {
-			response.status(400).json({ error: "No file uploaded" })
-			return
-		}
+			resolve()
+		})
+	})
 
-		const file = request.file
+const removeFile = async (filePath: string): Promise<void> => {
+	try {
+		await fs.unlink(filePath)
+	} catch (err: unknown) {
+		if (!isErrnoException(err) || err.code !== "ENOENT") {
+			throw err
+		}
+	}
+}
+
+export const store: AuthenticatedHandler = async (request, response) => {
+	await runUpload(request, response)
+
+	const file = request.file
+
+	if (!file) throw new AppError(400, "No file uploaded")
+
+	try {
+		const body = imageSchema.parse(request.body)
 		const url = `/storage/${file.filename}`
-
-		imageSchema.parse(request.body)
 
 		const image = await prisma.$transaction(async (tx) => {
 			const created = await tx.image.create({
 				data: {
 					url,
-					imageableId: request.body.imageableId,
-					imageableType: request.body.imageableType,
+					imageableId: body.imageableId,
+					imageableType: body.imageableType,
 					userId: request.userId,
 					size: file.size,
 				},
@@ -55,59 +72,24 @@ export const store: AuthenticatedHandler = (request, response) => {
 		response
 			.status(201)
 			.json({ message: "Image upload successful", data: { image } })
-	})
+	} catch (err) {
+		await removeFile(file.path).catch(() => undefined)
+		throw err
+	}
 }
 
-export const destroy: RequestHandler = async (request, response) => {
+export const destroy: AuthenticatedHandler = async (request, response) => {
 	const { id } = deleteImageSchema.parse(request.body)
 
-	const image = await prisma.$transaction(async (tx) => {
-		const fetched = await tx.image.findUniqueOrThrow({ where: { id } })
-
-		const owner = await resolveImageable(
-			tx,
-			fetched.imageableType,
-			fetched.imageableId
-		)
-
-		return { ...fetched, owner }
+	const image = await prisma.image.findFirst({
+		where: { id, userId: request.userId },
 	})
 
 	if (!image) throw new AppError(404, "Image not found")
 
-	const filePath = path.join(UPLOAD_DIR, path.basename(image.url))
-
-	try {
-		await fs.unlink(filePath)
-	} catch (err: unknown) {
-		if (!isErrnoException(err) || err.code !== "ENOENT") {
-			throw err
-		}
-	}
-
 	await prisma.image.delete({ where: { id } })
+
+	await removeFile(path.join(UPLOAD_DIR, path.basename(image.url)))
 
 	response.status(200).json({ message: "Image deleted successfully" })
 }
-
-type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
-
-const imageableResolvers = {
-	User: (tx: Tx, id: string) => tx.user.findUnique({ where: { id } }),
-	Category: (tx: Tx, id: string) => tx.category.findUnique({ where: { id } }),
-	Product: (tx: Tx, id: string) => tx.product.findUnique({ where: { id } }),
-} as const
-
-export async function resolveImageable(
-	tx: Tx,
-	imageableType: string,
-	imageableId: string
-) {
-	const resolver =
-		imageableResolvers[imageableType as keyof typeof imageableResolvers]
-	if (!resolver) return null
-	return resolver(tx, imageableId)
-}
-
-const isErrnoException = (err: unknown): err is NodeJS.ErrnoException =>
-	err instanceof Error && "code" in err

@@ -1,10 +1,10 @@
 import multer from "multer"
 import path from "path"
 import fs from "fs"
+import { env } from "./env.js"
 import { ALLOWED_IMAGE_TYPES } from "../validations/media.schema.js"
 
 export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR as string)
-const MAX_UPLOAD_SIZE_MB = Number(process.env.MAX_UPLOAD_SIZE_MB) || 50
 
 const DOC_MIMES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
 
@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 
 export const uploader = multer({
 	storage,
-	limits: { fileSize: MAX_UPLOAD_SIZE_MB * 1024 * 1024 },
+	limits: { fileSize: env.MAX_UPLOAD_SIZE_MB * 1024 * 1024 },
 	fileFilter: (_req, file, cb) => {
 		if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
 			cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname))
