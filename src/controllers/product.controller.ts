@@ -8,6 +8,7 @@ import {
 } from "../validations/product.schemas.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
 import { paginate } from "../lib/paginate.js"
+import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
 
 export const index: RequestHandler = async (request, response) => {
 	const { page, perPage, search } = urlQuerySchema.parse(request.query)
@@ -51,10 +52,10 @@ export const show: RequestHandler = async (request, response) => {
 	response.json({ data: product })
 }
 
-export const store: RequestHandler = async (request, response) => {
+export const store: AuthenticatedHandler = async (request, response) => {
 	const { imageUrl, categoryId, ...productFields } =
 		createProductSchema.parse(request.body)
-	const userId = `848478-hfhfhf`
+	const userId = request.userId
 
 	const data: Prisma.ProductCreateInput = {
 		...productFields,

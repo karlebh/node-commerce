@@ -24,6 +24,7 @@ const envSchema = z.object({
 	SESSION_TTL_MS: z.coerce.number().int().positive().default(604800000),
 	FRONTEND_URL: z.string().url().default("http://localhost:5173"),
 	APP_NAME: z.string(),
+	MAX_UPLOAD_SIZE_MB: z.number().int().positive(),
 })
 
 export const env = envSchema.parse(process.env)

@@ -4,3 +4,4 @@ dist/
 prisma/*.db
 prisma/*.db-journal
 logs/*.log
+src/storage/

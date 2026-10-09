@@ -40,8 +40,15 @@ export const requiresAuth: RequestHandler = async (
 		if (session.userId !== payload.sub)
 			throw new AppError(401, "Invalid session")
 
-		request.userId = session.userId
-		request.sessionId = session.id
+		if (!session.userId || !session.id) {
+			throw new AppError(401, "Invalid session")
+		}
+
+		Object.assign(request, {
+			userId: session.userId,
+			sessionId: session.id,
+		})
+
 		next()
 	} catch (err) {
 		next(err)

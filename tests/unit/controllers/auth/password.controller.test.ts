@@ -1,66 +1,105 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+	createControllerTestResponse,
+	invokeController,
+	type ControllerTestRequest,
+} from "../../../helpers/controller-test.js"
+
+type ChangePasswordBody = {
+	current_password: string
+	password: string
+	password_confirmation?: string
+	passwordConfirmation?: string
+}
+
+type ResetPasswordBody = {
+	email: string
+}
+
+type ConfirmPasswordResetBody = {
+	password: string
+	password_confirmation?: string
+	passwordConfirmation?: string
+}
+
+type ResetTokenParams = {
+	token: string
+}
+
+type ResetTokenTransaction = {
+	passwordResetToken: {
+		deleteMany: ReturnType<typeof vi.fn>
+		create: ReturnType<typeof vi.fn>
+	}
+}
+
+type ConfirmResetTransaction = {
+	user: {
+		update: ReturnType<typeof vi.fn>
+	}
+	passwordResetToken: {
+		delete: ReturnType<typeof vi.fn>
+	}
+}
 
 const mockPrisma = {
 	user: {
-		findUnique: jest.fn(),
-		update: jest.fn(),
+		findUnique: vi.fn(),
+		update: vi.fn(),
 	},
 	passwordResetToken: {
-		deleteMany: jest.fn(),
-		create: jest.fn(),
-		findFirst: jest.fn(),
-		delete: jest.fn(),
+		deleteMany: vi.fn(),
+		create: vi.fn(),
+		findFirst: vi.fn(),
+		delete: vi.fn(),
 	},
-	$transaction: jest.fn(),
+	$transaction: vi.fn(),
 }
 
 const mockBcrypt = {
-	compare: jest.fn(),
-	hash: jest.fn(),
+	compare: vi.fn(),
+	hash: vi.fn(),
 }
 
-const mockAddEmailJob = jest.fn()
+const mockAddEmailJob = vi.fn()
 
-jest.unstable_mockModule("../../database/prisma.js", () => ({
+vi.mock("../../../../src/database/prisma.js", () => ({
 	prisma: mockPrisma,
 }))
 
-jest.unstable_mockModule("bcryptjs", () => ({
+vi.mock("bcryptjs", () => ({
 	default: mockBcrypt,
 }))
 
-jest.unstable_mockModule("../../jobs/emailQueue.js", () => ({
+vi.mock("../../../../src/jobs/emailQueue.js", () => ({
 	addEmailJob: mockAddEmailJob,
 }))
 
-jest.unstable_mockModule("../../configs/env.js", () => ({
+vi.mock("../../../../src/configs/env.js", () => ({
 	env: {
 		APP_NAME: "My Backend",
 	},
 }))
 
 const { changePassword, resetPassword, confirmPasswordReset } =
-	await import("./password.controller.js")
+	await import("../../../../src/controllers/auth/password.controller.js")
 
 describe("Password Controller", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	describe("changePassword", () => {
 		it("changes the user's password", async () => {
-			const request = {
+			const request: ControllerTestRequest<ChangePasswordBody> = {
 				userId: "user-123",
 				body: {
 					current_password: "old-password",
 					password: "new-password",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue({
 				id: "user-123",
@@ -71,7 +110,7 @@ describe("Password Controller", () => {
 			mockBcrypt.compare.mockResolvedValue(true)
 			mockBcrypt.hash.mockResolvedValue("new-hash")
 
-			await changePassword(request, response)
+			await invokeController(changePassword, request, response)
 
 			expect(mockBcrypt.compare).toHaveBeenCalledWith(
 				"old-password",
@@ -93,35 +132,35 @@ describe("Password Controller", () => {
 		})
 
 		it("throws when the user does not exist", async () => {
-			const request = {
+			const request: ControllerTestRequest<ChangePasswordBody> = {
 				userId: "user-123",
 				body: {
 					current_password: "old-password",
 					password: "new-password",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue(null)
 
-			await expect(changePassword(request, response)).rejects.toThrow(
-				"Error fetching user"
-			)
+			await expect(
+				invokeController(changePassword, request, response)
+			).rejects.toThrow("Error fetching user")
 
 			expect(mockPrisma.user.update).not.toHaveBeenCalled()
 		})
 
 		it("throws when the current password is incorrect", async () => {
-			const request = {
+			const request: ControllerTestRequest<ChangePasswordBody> = {
 				userId: "user-123",
 				body: {
 					current_password: "wrong-password",
 					password: "new-password",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue({
 				id: "user-123",
@@ -130,9 +169,9 @@ describe("Password Controller", () => {
 
 			mockBcrypt.compare.mockResolvedValue(false)
 
-			await expect(changePassword(request, response)).rejects.toThrow(
-				"Current password is incorrect"
-			)
+			await expect(
+				invokeController(changePassword, request, response)
+			).rejects.toThrow("Current password is incorrect")
 
 			expect(mockBcrypt.hash).not.toHaveBeenCalled()
 			expect(mockPrisma.user.update).not.toHaveBeenCalled()
@@ -141,21 +180,18 @@ describe("Password Controller", () => {
 
 	describe("resetPassword", () => {
 		it("creates a reset token and queues the reset email", async () => {
-			const request = {
+			const request: ControllerTestRequest<ResetPasswordBody> = {
 				body: {
 					email: "john@example.com",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
-			const tx = {
+			const tx: ResetTokenTransaction = {
 				passwordResetToken: {
-					deleteMany: jest.fn(),
-					create: jest.fn(),
+					deleteMany: vi.fn(),
+					create: vi.fn(),
 				},
 			}
 
@@ -164,11 +200,12 @@ describe("Password Controller", () => {
 				email: "john@example.com",
 			})
 
-			mockPrisma.$transaction.mockImplementation(async (callback: any) =>
-				callback(tx)
+			mockPrisma.$transaction.mockImplementation(
+				(callback: (transaction: ResetTokenTransaction) => Promise<unknown>) =>
+					callback(tx)
 			)
 
-			await resetPassword(request, response)
+			await invokeController(resetPassword, request, response)
 
 			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
 				where: { email: "john@example.com" },
@@ -205,20 +242,17 @@ describe("Password Controller", () => {
 		})
 
 		it("does not reveal whether the email exists", async () => {
-			const request = {
+			const request: ControllerTestRequest<ResetPasswordBody> = {
 				body: {
 					email: "unknown@example.com",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue(null)
 
-			await resetPassword(request, response)
+			await invokeController(resetPassword, request, response)
 
 			expect(mockPrisma.$transaction).not.toHaveBeenCalled()
 			expect(mockAddEmailJob).not.toHaveBeenCalled()
@@ -234,19 +268,18 @@ describe("Password Controller", () => {
 
 	describe("confirmPasswordReset", () => {
 		it("resets the password and deletes the reset token", async () => {
-			const request = {
+			const request: ControllerTestRequest<
+				ConfirmPasswordResetBody
+			> = {
 				params: {
 					token: "plain-reset-token",
 				},
 				body: {
 					password: "new-password",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			const resetToken = {
 				id: "reset-token-123",
@@ -256,12 +289,12 @@ describe("Password Controller", () => {
 				expiresAt: new Date(Date.now() + 60 * 60 * 1000),
 			}
 
-			const tx = {
+			const tx: ConfirmResetTransaction = {
 				user: {
-					update: jest.fn(),
+					update: vi.fn(),
 				},
 				passwordResetToken: {
-					delete: jest.fn(),
+					delete: vi.fn(),
 				},
 			}
 
@@ -279,11 +312,12 @@ describe("Password Controller", () => {
 
 			tx.user.update.mockResolvedValue(updatedUser)
 
-			mockPrisma.$transaction.mockImplementation(async (callback: any) =>
-				callback(tx)
+			mockPrisma.$transaction.mockImplementation(
+				(callback: (transaction: ConfirmResetTransaction) => Promise<unknown>) =>
+					callback(tx)
 			)
 
-			await confirmPasswordReset(request, response)
+			await invokeController(confirmPasswordReset, request, response)
 
 			expect(mockBcrypt.hash).toHaveBeenCalledWith("new-password", 12)
 
@@ -313,21 +347,25 @@ describe("Password Controller", () => {
 		})
 
 		it("rejects an invalid or expired reset token", async () => {
-			const request = {
+			const request: ControllerTestRequest<
+				ConfirmPasswordResetBody
+			> & {
+				params: ResetTokenParams
+			} = {
 				params: {
 					token: "invalid-token",
 				},
 				body: {
 					password: "new-password",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.passwordResetToken.findFirst.mockResolvedValue(null)
 
 			await expect(
-				confirmPasswordReset(request, response)
+				invokeController(confirmPasswordReset, request, response)
 			).rejects.toThrow("Invalid or expired password reset token")
 
 			expect(mockBcrypt.hash).not.toHaveBeenCalled()

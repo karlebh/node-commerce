@@ -7,7 +7,12 @@ import { logger } from "./lib/logger.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import { notFound } from "./middleware/notFound.js"
 import { apiRateLimiter } from "./middleware/rateLimiter.js"
-import { categoryRouter, productRouter, authRouter } from "./routes/api.js"
+import {
+	authRouter,
+	categoryRouter,
+	imageRouter,
+	productRouter,
+} from "./routes/api.js"
 
 export const app = express()
 
@@ -22,5 +27,6 @@ app.get("/health", (_request, response) => response.json({ status: "ok" }))
 app.use("/api/auth", authRouter)
 app.use("/api/categories", categoryRouter)
 app.use("/api/products", productRouter)
+app.use("/api/images", imageRouter)
 app.use(notFound)
 app.use(errorHandler)

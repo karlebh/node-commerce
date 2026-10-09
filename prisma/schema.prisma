@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["strictUndefinedChecks"]
 }
 
 datasource db {
@@ -7,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   username     String
-  email        String   @unique
+  email        String    @unique
   passwordHash String
   products     Product[]
   session      Session[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  images       Image[]
 
   @@map("users")
 }
@@ -28,37 +30,37 @@ model Product {
   stock       Int      @default(0)
   imageUrl    String?
   isActive    Boolean  @default(true)
-  userId      String 
-  categoryId  String 
-  user        User @relation(fields: [userId], references: [id])
+  userId      String
+  categoryId  String
+  user        User     @relation(fields: [userId], references: [id])
   category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("products")
   @@index([userId])
   @@index([categoryId])
+  @@map("products")
 }
 
 model Category {
- id          String   @id @default(cuid())
- name        String @unique
- slug        String @unique
- products    Product[]
- createdAt   DateTime @default(now())
- updatedAt   DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
- @@map("categories")
+  @@map("categories")
 }
 
 model Session {
-  id        String    @id @default(cuid())     
+  id        String    @id @default(cuid())
   userId    String
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -72,4 +74,25 @@ model PasswordResetToken {
 
   @@index([email])
   @@map("password_reset_tokens")
+}
+
+enum ImageableType {
+  POST
+  PRODUCT
+  CATEGORY
+}
+
+model Image {
+  id            String        @id @default(cuid())
+  userId        String
+  url           String
+  imageableId   String
+  imageableType ImageableType
+  size          Int
+  createdAt     DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([imageableType, imageableId, userId])
+  @@map("images")
 }

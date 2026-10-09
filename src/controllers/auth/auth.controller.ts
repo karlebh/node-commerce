@@ -8,6 +8,7 @@ import {
 } from "../../validations/auth.schemas.js"
 import { createSessionAndToken, publicUser } from "../../helpers/index.js"
 import { addEmailJob } from "../../jobs/emailQueue.js"
+import type { AuthenticatedHandler } from "../../middleware/protectedHandler.js"
 
 export const register: RequestHandler = async (request, response) => {
 	registerUserSchema.parse(request.body)
@@ -51,22 +52,19 @@ export const login: RequestHandler = async (request, response) => {
 	})
 }
 
-export const logout: RequestHandler = async (request, response) => {
+export const logout: AuthenticatedHandler = async (request, response) => {
 	const sessionId = request.sessionId
 
-	if (sessionId) {
-		await prisma.session.update({
-			where: { id: sessionId },
-			data: { revokedAt: new Date() },
-		})
-	}
+	await prisma.session.update({
+		where: { id: sessionId },
+		data: { revokedAt: new Date() },
+	})
 
 	return response.status(200).json({ message: "Logout successful" })
 }
 
-export const me: RequestHandler = async (request, response) => {
+export const me: AuthenticatedHandler = async (request, response) => {
 	const userId = request.userId
-	if (!userId) throw new AppError(401, "Authentication required")
 	const user = await prisma.user.findUnique({ where: { id: userId } })
 	if (!user) throw new AppError(404, "User not found")
 	const token = await createSessionAndToken(user.id)

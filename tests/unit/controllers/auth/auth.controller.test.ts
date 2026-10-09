@@ -1,38 +1,56 @@
-import { beforeEach, expect, jest, describe, it } from "@jest/globals"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+	createControllerTestResponse,
+	invokeController,
+	type ControllerTestRequest,
+} from "../../../helpers/controller-test.js"
+
+type RegisterBody = {
+	username: string
+	email: string
+	password: string
+	password_confirmation?: string
+	passwordConfirmation?: string
+}
+
+type LoginBody = {
+	email: string
+	password: string
+}
 
 const mockPrisma = {
 	user: {
-		findUnique: jest.fn(),
-		create: jest.fn(),
+		findUnique: vi.fn(),
+		create: vi.fn(),
 	},
 	session: {
-		update: jest.fn(),
+		update: vi.fn(),
 	},
 }
 
 const mockBcrypt = {
-	hash: jest.fn(),
-	compare: jest.fn(),
+	hash: vi.fn(),
+	compare: vi.fn(),
 }
 
-const mockCreateSessionAndToken = jest.fn()
-const mockPublicUser = jest.fn()
-const mockAddEmailJob = jest.fn()
+const mockCreateSessionAndToken = vi.fn()
+const mockPublicUser = vi.fn()
+const mockAddEmailJob = vi.fn()
 
-jest.unstable_mockModule("../../../../src/database/prisma.js", () => ({
+vi.mock("../../../../src/database/prisma.js", () => ({
 	prisma: mockPrisma,
 }))
 
-jest.unstable_mockModule("bcryptjs", () => ({
+vi.mock("bcryptjs", () => ({
 	default: mockBcrypt,
 }))
 
-jest.unstable_mockModule("../../../../src/helpers/index.js", () => ({
+vi.mock("../../../../src/helpers/index.js", () => ({
 	createSessionAndToken: mockCreateSessionAndToken,
 	publicUser: mockPublicUser,
 }))
 
-jest.unstable_mockModule("../../../../src/jobs/emailQueue.js", () => ({
+vi.mock("../../../../src/jobs/emailQueue.js", () => ({
 	addEmailJob: mockAddEmailJob,
 }))
 
@@ -41,23 +59,20 @@ const { register, login, logout, me } =
 
 describe("Auth Controller", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	describe("register", () => {
 		it("registers a new user successfully", async () => {
-			const request = {
+			const request: ControllerTestRequest<RegisterBody> = {
 				body: {
 					username: "john",
 					email: "john@example.com",
 					password: "password123",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			const user = {
 				id: "user-123",
@@ -78,7 +93,7 @@ describe("Auth Controller", () => {
 			mockCreateSessionAndToken.mockResolvedValue("jwt-token")
 			mockPublicUser.mockReturnValue(publicUser)
 
-			await register(request, response)
+			await invokeController(register, request, response)
 
 			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
 				where: { email: "john@example.com" },
@@ -112,22 +127,24 @@ describe("Auth Controller", () => {
 		})
 
 		it("throws when the user already exists", async () => {
-			const request = {
+			const request: ControllerTestRequest<RegisterBody> = {
 				body: {
 					username: "john",
 					email: "john@example.com",
 					password: "password123",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue({
 				id: "existing-user",
 				email: "john@example.com",
 			})
 
-			await expect(register(request, response)).rejects.toThrow(
+			await expect(
+				invokeController(register, request, response)
+			).rejects.toThrow(
 				"User already exists"
 			)
 
@@ -139,17 +156,14 @@ describe("Auth Controller", () => {
 
 	describe("login", () => {
 		it("logs in successfully", async () => {
-			const request = {
+			const request: ControllerTestRequest<LoginBody> = {
 				body: {
 					email: "john@example.com",
 					password: "password123",
 				},
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			const user = {
 				id: "user-123",
@@ -169,7 +183,7 @@ describe("Auth Controller", () => {
 			mockCreateSessionAndToken.mockResolvedValue("jwt-token")
 			mockPublicUser.mockReturnValue(publicUser)
 
-			await login(request, response)
+			await invokeController(login, request, response)
 
 			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
 				where: { email: "john@example.com" },
@@ -194,18 +208,20 @@ describe("Auth Controller", () => {
 		})
 
 		it("rejects an unknown email", async () => {
-			const request = {
+			const request: ControllerTestRequest<LoginBody> = {
 				body: {
 					email: "unknown@example.com",
 					password: "password123",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue(null)
 
-			await expect(login(request, response)).rejects.toThrow(
+			await expect(
+				invokeController(login, request, response)
+			).rejects.toThrow(
 				"Invalid email or password"
 			)
 
@@ -214,14 +230,14 @@ describe("Auth Controller", () => {
 		})
 
 		it("rejects an incorrect password", async () => {
-			const request = {
+			const request: ControllerTestRequest<LoginBody> = {
 				body: {
 					email: "john@example.com",
 					password: "wrong-password",
 				},
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue({
 				id: "user-123",
@@ -231,7 +247,9 @@ describe("Auth Controller", () => {
 
 			mockBcrypt.compare.mockResolvedValue(false)
 
-			await expect(login(request, response)).rejects.toThrow(
+			await expect(
+				invokeController(login, request, response)
+			).rejects.toThrow(
 				"Invalid email or password"
 			)
 
@@ -241,20 +259,18 @@ describe("Auth Controller", () => {
 
 	describe("logout", () => {
 		it("revokes the current session", async () => {
-			const request = {
+			const request: ControllerTestRequest = {
+				body: {},
 				sessionId: "session-123",
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.session.update.mockResolvedValue({
 				id: "session-123",
 			})
 
-			await logout(request, response)
+			await invokeController(logout, request, response)
 
 			expect(mockPrisma.session.update).toHaveBeenCalledWith({
 				where: { id: "session-123" },
@@ -270,38 +286,16 @@ describe("Auth Controller", () => {
 			})
 		})
 
-		it("succeeds without a session id", async () => {
-			const request = {
-				sessionId: undefined,
-			} as any
-
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
-
-			await logout(request, response)
-
-			expect(mockPrisma.session.update).not.toHaveBeenCalled()
-
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message: "Logout successful",
-			})
-		})
 	})
 
 	describe("me", () => {
 		it("returns the authenticated user and creates a new token", async () => {
-			const request = {
+			const request: ControllerTestRequest = {
+				body: {},
 				userId: "user-123",
-			} as any
+			}
 
-			const response = {
-				status: jest.fn().mockReturnThis(),
-				json: jest.fn().mockReturnThis(),
-			} as any
+			const response = createControllerTestResponse()
 
 			const user = {
 				id: "user-123",
@@ -320,7 +314,7 @@ describe("Auth Controller", () => {
 			mockCreateSessionAndToken.mockResolvedValue("new-jwt-token")
 			mockPublicUser.mockReturnValue(publicUser)
 
-			await me(request, response)
+			await invokeController(me, request, response)
 
 			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
 				where: { id: "user-123" },
@@ -338,30 +332,19 @@ describe("Auth Controller", () => {
 			})
 		})
 
-		it("rejects when there is no authenticated user", async () => {
-			const request = {
-				userId: undefined,
-			} as any
-
-			const response = {} as any
-
-			await expect(me(request, response)).rejects.toThrow(
-				"Authentication required"
-			)
-
-			expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
-		})
-
 		it("throws when the authenticated user does not exist", async () => {
-			const request = {
+			const request: ControllerTestRequest = {
+				body: {},
 				userId: "user-123",
-			} as any
+			}
 
-			const response = {} as any
+			const response = createControllerTestResponse()
 
 			mockPrisma.user.findUnique.mockResolvedValue(null)
 
-			await expect(me(request, response)).rejects.toThrow(
+			await expect(
+				invokeController(me, request, response)
+			).rejects.toThrow(
 				"User not found"
 			)
 

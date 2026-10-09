@@ -14,55 +14,62 @@ import {
 	update as updateCategory,
 } from "../controllers/category.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
-import { requiresAuth } from "../middleware/requiresAuth.js"
+import { protectedHandler } from "../middleware/protectedHandler.js"
 import {
 	login,
 	logout,
 	me,
 	register,
 } from "../controllers/auth/auth.controller.js"
+import {
+	changePassword,
+	resetPassword,
+} from "../controllers/auth/password.controller.js"
+import {
+	store as storeImage,
+	destroy as destroyImage,
+} from "../controllers/image.controller.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { prisma } from "../database/prisma.js"
 import { requiresGuest } from "../middleware/requiresGuest.js"
-import { resetPassword } from "../controllers/auth/passwors_reset.controller.js"
 
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
 productRouter.get("/:slug", asyncHandler(showProduct))
-productRouter.post("/", requiresAuth, asyncHandler(storeProduct))
+productRouter.post("/", protectedHandler(storeProduct))
 productRouter.patch(
 	"/:id",
-	requiresAuth,
-	requiresOwnership(prisma.product),
-	asyncHandler(updateProduct)
+	protectedHandler(updateProduct, requiresOwnership(prisma.product))
 )
 productRouter.delete(
 	"/:id",
-	requiresAuth,
-	requiresOwnership(prisma.product),
-	asyncHandler(destroyProduct)
+	protectedHandler(destroyProduct, requiresOwnership(prisma.product))
 )
 
 export const authRouter = Router()
 authRouter.post("/register", requiresGuest, asyncHandler(register))
 authRouter.post("/login", requiresGuest, asyncHandler(login))
 authRouter.post("/reset-password", requiresGuest, asyncHandler(resetPassword))
-authRouter.get("/me", requiresAuth, asyncHandler(me))
-authRouter.post("/logout", requiresAuth, asyncHandler(logout))
+authRouter.get("/me", protectedHandler(me))
+authRouter.post("/logout", protectedHandler(logout))
+authRouter.patch("/change-password", protectedHandler(changePassword))
 
 export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
 categoryRouter.get("/:name", asyncHandler(showCategory))
-categoryRouter.post("/", requiresAuth, asyncHandler(storeCategory))
+categoryRouter.post("/", protectedHandler(storeCategory))
 categoryRouter.patch(
 	"/:name",
-	requiresAuth,
-	requiresOwnership(prisma.category),
-	asyncHandler(updateCategory)
+	protectedHandler(updateCategory, requiresOwnership(prisma.category))
 )
 categoryRouter.delete(
 	"/:name",
-	requiresAuth,
-	requiresOwnership(prisma.category),
-	asyncHandler(destroyCategory)
+	protectedHandler(destroyCategory, requiresOwnership(prisma.category))
+)
+
+export const imageRouter = Router()
+imageRouter.post("/", protectedHandler(storeImage))
+imageRouter.delete(
+	"/:id",
+	protectedHandler(destroyImage, requiresOwnership(prisma.image))
 )
