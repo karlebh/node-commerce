@@ -27,6 +27,8 @@ export const emailWorker = new Worker(
 				await sendResetPasswordSuccessEmail(email, name, appName)
 				break
 			}
+			default:
+				throw new Error(`Unsupported email job: ${job.name}`)
 		}
 	},
 	{ connection, concurrency: 5 }
@@ -34,4 +36,12 @@ export const emailWorker = new Worker(
 
 emailWorker.on("failed", (job, error) => {
 	console.error(`Email job ${job?.name} (${job?.id}) failed:`, error.message)
+})
+
+emailWorker.on("completed", (job) => {
+	console.info(`Email job ${job.name} (${job.id}) completed`)
+})
+
+emailWorker.on("completed", (job) => {
+	console.info(`Email job ${job.name} (${job.id}) completed`)
 })

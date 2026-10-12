@@ -13,7 +13,7 @@ import { addEmailJob } from "../../jobs/emailQueue.js"
 import { env } from "../../configs/env.js"
 import type { AuthenticatedHandler } from "../../middleware/protectedHandler.js"
 
-export const changePassword: AuthenticatedHandler = async (request, response) => {
+export const change: AuthenticatedHandler = async (request, response) => {
 	const userId = request.userId
 
 	const { current_password, password } = changePasswordSchema.parse(
@@ -47,7 +47,7 @@ export const changePassword: AuthenticatedHandler = async (request, response) =>
 	})
 }
 
-export const resetPassword: RequestHandler = async (request, response) => {
+export const reset: RequestHandler = async (request, response) => {
 	const { email } = resetPasswordSchema.parse(request.body)
 
 	const user = await prisma.user.findUnique({
@@ -81,10 +81,7 @@ export const resetPassword: RequestHandler = async (request, response) => {
 	})
 }
 
-export const confirmPasswordReset: RequestHandler = async (
-	request,
-	response
-) => {
+export const confirmReset: RequestHandler = async (request, response) => {
 	const { token } = confirmPasswordResetTokenSchema.parse(request.params)
 	const { password } = confirmPasswordResetBodySchema.parse(request.body)
 

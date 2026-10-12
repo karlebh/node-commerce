@@ -23,6 +23,7 @@ const envSchema = z.object({
 	JWT_EXPIRES_IN: msString.default("15m" as StringValue),
 	SESSION_TTL_MS: z.coerce.number().int().positive().default(604800000),
 	FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+	APP_URL: z.string().url().optional(),
 	APP_NAME: z.string(),
 	MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(50),
 })

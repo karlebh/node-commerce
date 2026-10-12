@@ -1,15 +1,17 @@
+import "dotenv/config"
 import fs from "node:fs"
 import path from "node:path"
 import Handlebars from "handlebars"
 import nodemailer from "nodemailer"
 import { fileURLToPath } from "node:url"
+import { env } from "../configs/env.js"
 
 const transporter = nodemailer.createTransport({
-	host: process.env.SMTP_HOST,
-	port: Number(process.env.SMTP_PORT),
+	host: process.env.MAIL_HOST,
+	port: Number(process.env.MAIL_PORT),
 	auth: {
-		user: process.env.SMTP_USER,
-		pass: process.env.SMTP_PASS,
+		user: process.env.MAIL_USERNAME,
+		pass: process.env.MAIL_PASSWORD,
 	},
 })
 
@@ -27,7 +29,7 @@ const loadTemplate = (name: string) => {
 const resetPasswordTemplate = loadTemplate("reset-password")
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-	const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`
+	const resetUrl = `${env.APP_URL ?? env.FRONTEND_URL}/reset-password?token=${token}`
 
 	await transporter.sendMail({
 		from: process.env.MAIL_FROM,
@@ -40,7 +42,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 const registerTemplate = loadTemplate("register")
 
 export async function sendRegisterEmail(email: string, name: string) {
-	const loginUrl = `${process.env.APP_URL}/login`
+	const loginUrl = `${env.APP_URL ?? env.FRONTEND_URL}/login`
 
 	await transporter.sendMail({
 		from: process.env.MAIL_FROM,

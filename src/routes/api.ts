@@ -22,8 +22,9 @@ import {
 	register,
 } from "../controllers/auth/auth.controller.js"
 import {
-	changePassword,
-	resetPassword,
+	change,
+	confirmReset,
+	reset,
 } from "../controllers/auth/password.controller.js"
 import {
 	store as storeImage,
@@ -49,10 +50,15 @@ productRouter.delete(
 export const authRouter = Router()
 authRouter.post("/register", requiresGuest, asyncHandler(register))
 authRouter.post("/login", requiresGuest, asyncHandler(login))
-authRouter.post("/reset-password", requiresGuest, asyncHandler(resetPassword))
+authRouter.post("/reset-password", requiresGuest, asyncHandler(reset))
+authRouter.post(
+	"/confirm-password-reset",
+	requiresGuest,
+	asyncHandler(confirmReset)
+)
 authRouter.get("/me", protectedHandler(me))
 authRouter.post("/logout", protectedHandler(logout))
-authRouter.patch("/change-password", protectedHandler(changePassword))
+authRouter.patch("/change-password", protectedHandler(change))
 
 export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
