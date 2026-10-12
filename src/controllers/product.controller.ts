@@ -94,3 +94,5 @@ export const destroy: RequestHandler = async (request, response) => {
 
 	response.status(204).send()
 }
+
+export const more: RequestHandler = async (request, response) => {}

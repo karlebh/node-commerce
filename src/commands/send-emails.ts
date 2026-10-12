@@ -1,5 +1,5 @@
 import type { CommandModule } from "yargs"
-import * as mailer from "../services/mailer.js"
+import * as mailer from "../services/mailer.service.js"
 
 type Args = { user: string; queue: boolean }
 
