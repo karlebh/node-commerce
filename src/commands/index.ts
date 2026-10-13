@@ -1,5 +1,5 @@
 import type { CommandModule } from "yargs"
-import { sendEmails } from "./sendEmails.js"
-import { cleanLogs } from "./cleanLogs.js"
+import { sendEmails } from "./send-emails.js"
+import { cleanLogs } from "./clean-logs.js"
 
 export const commands: CommandModule<{}, any>[] = [sendEmails, cleanLogs]
