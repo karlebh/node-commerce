@@ -16,26 +16,31 @@ model User {
   session      Session[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
   images       Image[]
+  likes        Like[]
+  cart         Cart?
 
   @@map("users")
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String    @unique
   description String
   price       Int
-  stock       Int      @default(0)
+  stock       Int       @default(0)
   imageUrl    String?
-  isActive    Boolean  @default(true)
+  isActive    Boolean   @default(true)
   userId      String
   categoryId  String
-  user        User     @relation(fields: [userId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  category    Category  @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  cartItems   CartItem[]
 
   @@index([userId])
   @@index([categoryId])
@@ -49,6 +54,7 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@map("categories")
 }
@@ -59,6 +65,7 @@ model Session {
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -66,11 +73,12 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   email     String
   tokenHash String
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@index([email])
   @@map("password_reset_tokens")
@@ -90,9 +98,57 @@ model Image {
   imageableType ImageableType
   size          Int
   createdAt     DateTime      @default(now())
+  deletedAt     DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([imageableType, imageableId, userId])
   @@map("images")
+}
+
+model Cart {
+  id        String    @id @default(cuid(2))
+  userId    String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String    @id @default(cuid(2))
+  cartId    String
+  productId String
+  quantity  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+enum LikeableType {
+  POST
+  PRODUCT
+}
+
+model Like {
+  id           String       @id @default(cuid(2))
+  userId       String
+  likeableId   String
+  likeableType LikeableType
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([likeableId, likeableType, userId])
+  @@map("likes")
 }

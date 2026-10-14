@@ -33,19 +33,20 @@ import {
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { prisma } from "../database/prisma.js"
 import { requiresGuest } from "../middleware/requiresGuest.js"
+import {
+	index as cartIndex,
+	addItem,
+	removeIteam,
+	clearCart,
+} from "../controllers/cart.controller.js"
 
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
 productRouter.get("/:slug", asyncHandler(showProduct))
 productRouter.post("/", protectedHandler(storeProduct))
-productRouter.patch(
-	"/:id",
-	protectedHandler(updateProduct, requiresOwnership(prisma.product))
-)
-productRouter.delete(
-	"/:id",
-	protectedHandler(destroyProduct, requiresOwnership(prisma.product))
-)
+productRouter.use(requiresOwnership(prisma.product))
+productRouter.patch("/:id", protectedHandler(updateProduct))
+productRouter.delete("/:id", protectedHandler(destroyProduct))
 
 export const authRouter = Router()
 authRouter.post("/register", requiresGuest, asyncHandler(register))
@@ -64,14 +65,9 @@ export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
 categoryRouter.get("/:name", asyncHandler(showCategory))
 categoryRouter.post("/", protectedHandler(storeCategory))
-categoryRouter.patch(
-	"/:name",
-	protectedHandler(updateCategory, requiresOwnership(prisma.category))
-)
-categoryRouter.delete(
-	"/:name",
-	protectedHandler(destroyCategory, requiresOwnership(prisma.category))
-)
+categoryRouter.use(requiresOwnership(prisma.category))
+categoryRouter.patch("/:name", protectedHandler(updateCategory))
+categoryRouter.delete("/:name", protectedHandler(destroyCategory))
 
 export const imageRouter = Router()
 imageRouter.post("/", protectedHandler(storeImage))
@@ -79,3 +75,10 @@ imageRouter.delete(
 	"/:id",
 	protectedHandler(destroyImage, requiresOwnership(prisma.image))
 )
+
+export const cartRouter = Router()
+cartRouter.use(requiresOwnership(prisma.cart))
+cartRouter.get("/", protectedHandler(cartIndex))
+cartRouter.post("/", protectedHandler(addItem))
+cartRouter.delete("/item", protectedHandler(removeIteam))
+cartRouter.delete("/", protectedHandler(clearCart))

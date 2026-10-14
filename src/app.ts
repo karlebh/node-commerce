@@ -9,6 +9,7 @@ import { notFound } from "./middleware/notFound.js"
 import { apiRateLimiter } from "./middleware/rateLimiter.js"
 import {
 	authRouter,
+	cartRouter,
 	categoryRouter,
 	imageRouter,
 	productRouter,
@@ -28,5 +29,6 @@ app.use("/api/auth", authRouter)
 app.use("/api/categories", categoryRouter)
 app.use("/api/products", productRouter)
 app.use("/api/images", imageRouter)
+app.use("/api/carts", cartRouter)
 app.use(notFound)
 app.use(errorHandler)

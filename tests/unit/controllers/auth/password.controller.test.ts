@@ -81,8 +81,11 @@ vi.mock("../../../../src/configs/env.js", () => ({
 	},
 }))
 
-const { changePassword, resetPassword, confirmPasswordReset } =
-	await import("../../../../src/controllers/auth/password.controller.js")
+const {
+	change: changePassword,
+	reset: resetPassword,
+	confirmReset: confirmPasswordReset,
+} = await import("../../../../src/controllers/auth/password.controller.js")
 
 describe("Password Controller", () => {
 	beforeEach(() => {
