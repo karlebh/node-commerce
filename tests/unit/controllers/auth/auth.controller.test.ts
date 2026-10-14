@@ -187,6 +187,7 @@ describe("Auth Controller", () => {
 
 			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
 				where: { email: "john@example.com" },
+				omit: { passwordHash: false },
 			})
 
 			expect(mockBcrypt.compare).toHaveBeenCalledWith(

@@ -43,6 +43,10 @@ export const like: AuthenticatedHandler = async (request, response) => {
 		.json({ message: "Like created successfully", like })
 }
 
-export const unlike: RequestHandler = (request, response) => {
+export const unlike: RequestHandler = async (request, response) => {
 	const { likeId } = destroyLikeSchema.parse(request.params)
+
+	const deleted = await prisma.$transaction(async (tx) => {
+		const exists = await tx.like.findUnique({ where: { id: likeId } })
+	})
 }

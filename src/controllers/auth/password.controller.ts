@@ -22,6 +22,7 @@ export const change: AuthenticatedHandler = async (request, response) => {
 
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
+		omit: { passwordHash: false },
 	})
 
 	if (!user) throw new AppError(404, "Error fetching user")

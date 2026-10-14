@@ -38,7 +38,10 @@ export const register: RequestHandler = async (request, response) => {
 
 export const login: RequestHandler = async (request, response) => {
 	const input = loginUserSchema.parse(request.body)
-	const user = await prisma.user.findUnique({ where: { email: input.email } })
+	const user = await prisma.user.findUnique({
+		where: { email: input.email },
+		omit: { passwordHash: false },
+	})
 
 	if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
 		throw new AppError(401, "Invalid email or password")
