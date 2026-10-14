@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+    provider = "postgresql"
 }
 
 model User {
@@ -103,6 +103,7 @@ model Image {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([imageableType, imageableId, userId])
+  @@unique([imageableType, imageableId, userId])
   @@map("images")
 }
 
@@ -140,7 +141,7 @@ enum LikeableType {
 
 model Like {
   id           String       @id @default(cuid(2))
-  userId       String
+  userId       String       
   likeableId   String
   likeableType LikeableType
   createdAt    DateTime     @default(now())
@@ -150,5 +151,6 @@ model Like {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([likeableId, likeableType, userId])
+  @@unique([likeableId, likeableType, userId])
   @@map("likes")
 }

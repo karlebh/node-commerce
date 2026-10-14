@@ -1,5 +1,5 @@
 import { ImageableType } from "@prisma/client"
-import z from "zod"
+import { z } from "zod"
 
 export const ALLOWED_IMAGE_TYPES = [
 	"image/jpeg",

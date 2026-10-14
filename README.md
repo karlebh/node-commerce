@@ -1,6 +1,6 @@
 # Ecommerce API
 
-An Express and TypeScript API for an ecommerce application, built with Prisma. It provides JWT-based authentication, account and password management, and endpoints for managing products, categories, and image uploads.
+An Express and TypeScript API for an ecommerce application, built with Prisma. It provides JWT-based authentication, account and password management, and endpoints for managing products, categories, image uploads and lots more.
 
 ## Setup
 

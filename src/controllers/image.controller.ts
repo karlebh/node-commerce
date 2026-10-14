@@ -7,7 +7,7 @@ import { prisma } from "../database/prisma.js"
 import { deleteImageSchema, imageSchema } from "../validations/media.schema.js"
 import { AppError } from "../errors/AppError.js"
 import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
-import { isErrnoException, resolveImageable } from "../helpers/index.js"
+import { isErrnoException, resolvePolymorphic } from "../helpers/index.js"
 
 const singleUpload = uploader.single("file")
 
@@ -60,7 +60,7 @@ export const store: AuthenticatedHandler = async (request, response) => {
 				},
 			})
 
-			const owner = await resolveImageable(
+			const owner = await resolvePolymorphic(
 				tx,
 				created.imageableType,
 				created.imageableId

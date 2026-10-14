@@ -1,4 +1,4 @@
-import { cuid2, z } from "zod"
+import { z } from "zod"
 import type { urlQuerySchema } from "./url-query.schema.js"
 
 export const createCategorySchema = z.object({
