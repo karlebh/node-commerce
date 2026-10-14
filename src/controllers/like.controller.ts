@@ -48,5 +48,7 @@ export const unlike: RequestHandler = async (request, response) => {
 
 	const deleted = await prisma.$transaction(async (tx) => {
 		const exists = await tx.like.findUnique({ where: { id: likeId } })
+
+		if (!exists) throw new AppError(404, "Like does not exist")
 	})
 }

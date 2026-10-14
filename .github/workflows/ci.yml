@@ -7,8 +7,8 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
-    env:
-      APP_NAME: node-commerce
+        env:
+            APP_NAME: node-commerce
 
         steps:
             - name: Checkout code
