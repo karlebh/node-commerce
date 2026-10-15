@@ -40,6 +40,10 @@ const mockPrisma = {
 		findUnique: vi.fn(),
 		create: vi.fn(),
 		update: vi.fn(),
+		delete: vi.fn(),
+	},
+	category: {
+		findUnique: vi.fn(),
 	},
 }
 
@@ -71,6 +75,7 @@ const { index, show, store, update, destroy } =
 describe("Product Controller", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mockPrisma.category.findUnique.mockResolvedValue({ id: "category-123" })
 	})
 
 	it("lists active products with pagination and search", async () => {
@@ -112,16 +117,15 @@ describe("Product Controller", () => {
 		)
 	})
 
-	it("shows an active product by slug", async () => {
+	it("shows an active product by ID", async () => {
 		const product: ProductRecord = {
-			id: "prod-1",
+			id: "abcdefgh12345678abcdefgh",
 			name: "Air Max",
-			slug: "air-max",
 			isActive: true,
 		}
 		const request: ControllerTestRequest<Record<string, never>> = {
 			body: {},
-			params: { slug: "air-max" },
+			params: { id: product.id },
 		}
 		const response = createControllerTestResponse()
 
@@ -130,15 +134,15 @@ describe("Product Controller", () => {
 		await invokeController(show, request, response)
 
 		expect(mockPrisma.product.findUnique).toHaveBeenCalledWith({
-			where: { slug: "air-max" },
+			where: { id: product.id },
 		})
 		expect(response.json).toHaveBeenCalledWith({ data: product })
 	})
 
-	it("throws a not found error if the product is missing or inactive", async () => {
+	it("throws a not found error if the product is missing", async () => {
 		const request: ControllerTestRequest<Record<string, never>> = {
 			body: {},
-			params: { slug: "missing-product" },
+			params: { id: "abcdefgh12345678abcdefgh" },
 		}
 		const response = createControllerTestResponse()
 
@@ -190,9 +194,9 @@ describe("Product Controller", () => {
 		expect(response.json).toHaveBeenCalledWith({ data: created })
 	})
 
-	it("updates only the provided product fields", async () => {
+	it("updates only the provided fields and regenerates the slug when the name changes", async () => {
 		const request: ControllerTestRequest<UpdateProductBody> = {
-			params: { slug: "air-max-270" },
+			params: { id: "abcdefgh12345678abcdefgh" },
 			body: { name: "Updated Name", price: 2500 },
 		}
 		const response = createControllerTestResponse()
@@ -203,27 +207,34 @@ describe("Product Controller", () => {
 		await invokeController(update, request, response)
 
 		expect(mockPrisma.product.update).toHaveBeenCalledWith({
-			where: { slug: "air-max-270" },
-			data: { name: "Updated Name", price: 2500 },
+			where: { id: "abcdefgh12345678abcdefgh" },
+			data: {
+				name: "Updated Name",
+				price: 2500,
+				slug: expect.stringMatching(
+					/^updated-name-[0-9a-f-]{36}$/
+				),
+			},
 		})
 		expect(response.status).toHaveBeenCalledWith(200)
 		expect(response.json).toHaveBeenCalledWith({ data: updated })
 	})
 
-	it("soft deletes a product instead of removing it", async () => {
+	it("deletes a product by ID", async () => {
 		const request: ControllerTestRequest<Record<string, never>> = {
 			body: {},
-			params: { id: "prod-123" },
+			params: { id: "abcdefgh12345678abcdefgh" },
 		}
 		const response = createControllerTestResponse()
 
 		await invokeController(destroy, request, response)
 
-		expect(mockPrisma.product.update).toHaveBeenCalledWith({
-			where: { id: "prod-123" },
-			data: { isActive: false },
+		expect(mockPrisma.product.delete).toHaveBeenCalledWith({
+			where: { id: "abcdefgh12345678abcdefgh" },
 		})
-		expect(response.status).toHaveBeenCalledWith(204)
-		expect(response.send).toHaveBeenCalledWith()
+		expect(response.status).toHaveBeenCalledWith(200)
+		expect(response.json).toHaveBeenCalledWith({
+			message: "Product deleted succesfully",
+		})
 	})
 })
