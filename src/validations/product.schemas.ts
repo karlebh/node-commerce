@@ -26,3 +26,10 @@ export const updateProductSchema = z.object({
 	imageUrl: z.string().url().optional(),
 	categoryId: z.string().optional(),
 })
+
+export const showProductSchema = z.object({
+	slug: z
+		.string()
+		.trim()
+		.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+})

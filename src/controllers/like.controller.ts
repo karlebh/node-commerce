@@ -5,7 +5,6 @@ import {
 	createLikeSchema,
 	destroyLikeSchema,
 } from "../validations/like.schema.js"
-import { AppError } from "../errors/AppError.js"
 import { resolvePolymorphic } from "../helpers/index.js"
 
 export const like: AuthenticatedHandler = async (request, response) => {
@@ -27,8 +26,6 @@ export const like: AuthenticatedHandler = async (request, response) => {
 			update: {},
 		})
 
-		if (!created) throw new AppError(500, "Error creating like")
-
 		const owner = await resolvePolymorphic(
 			tx,
 			created.likeableType,
@@ -46,9 +43,11 @@ export const like: AuthenticatedHandler = async (request, response) => {
 export const unlike: RequestHandler = async (request, response) => {
 	const { likeId } = destroyLikeSchema.parse(request.params)
 
-	const deleted = await prisma.$transaction(async (tx) => {
-		const exists = await tx.like.findUnique({ where: { id: likeId } })
+	await prisma.like.delete({
+		where: { id: likeId },
+	})
 
-		if (!exists) throw new AppError(404, "Like does not exist")
+	return response.status(200).json({
+		message: "Like deleted successfully",
 	})
 }

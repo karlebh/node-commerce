@@ -9,6 +9,10 @@ vi.mock("../src/database/prisma.js", () => ({
 	},
 }))
 
+vi.mock("../src/jobs/emailQueue.js", () => ({
+	addEmailJob: vi.fn(),
+}))
+
 import { app } from "../src/app.js"
 
 describe("health endpoint", () => {

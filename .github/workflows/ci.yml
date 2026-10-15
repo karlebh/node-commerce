@@ -8,7 +8,16 @@ jobs:
     test:
         runs-on: ubuntu-latest
         env:
+            CI: "true"
+            NODE_ENV: test
             APP_NAME: node-commerce
+            UPLOAD_DIR: ${{ runner.temp }}/node-commerce-uploads
+            JWT_SECRET: test-only-secret-for-ci-at-least-32-characters
+            JWT_EXPIRES_IN: 15m
+            SESSION_TTL_MS: "604800000"
+            FRONTEND_URL: http://localhost:5173
+            MAX_UPLOAD_SIZE_MB: "50"
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/node_commerce_test
 
         steps:
             - name: Checkout code
@@ -17,11 +26,14 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 26
+                  node-version: 24
                   cache: npm
 
             - name: Install dependencies
               run: npm ci
+
+            - name: Generate Prisma Client
+              run: npm run db:generate
 
             - name: Run tests
               run: npm test

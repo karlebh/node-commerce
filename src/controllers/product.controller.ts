@@ -4,6 +4,7 @@ import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
 import {
 	createProductSchema,
+	showProductSchema,
 	updateProductSchema,
 } from "../validations/product.schemas.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
@@ -40,9 +41,7 @@ export const index: RequestHandler = async (request, response) => {
 }
 
 export const show: RequestHandler = async (request, response) => {
-	const slug = request.params.slug
-
-	if (typeof slug !== "string") throw new AppError(404, "Product not found")
+	const { slug } = showProductSchema.parse(request.params.slug)
 
 	const product = await prisma.product.findUnique({ where: { slug } })
 
