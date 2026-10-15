@@ -85,6 +85,10 @@ export const update: RequestHandler = async (request, response) => {
 		Object.entries(input).filter(([, value]) => value !== undefined)
 	) as Prisma.ProductUpdateInput
 
+	if (typeof data.name === "string") {
+		data.slug = createSlug(data.name)
+	}
+
 	const product = await prisma.product.update({
 		where: { id },
 		data,
@@ -96,10 +100,9 @@ export const update: RequestHandler = async (request, response) => {
 export const destroy: RequestHandler = async (request, response) => {
 	const { id } = productParamSchema.parse(request.params)
 
-	await prisma.product.update({
+	await prisma.product.delete({
 		where: { id },
-		data: { isActive: false },
 	})
 
-	response.status(204).send()
+	response.status(200).json({ message: "Product deleted succesfully" })
 }

@@ -44,9 +44,14 @@ export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
 productRouter.get("/:id", asyncHandler(showProduct))
 productRouter.post("/", protectedHandler(storeProduct))
-productRouter.use(requiresOwnership(prisma.product))
-productRouter.patch("/:id", protectedHandler(updateProduct))
-productRouter.delete("/:id", protectedHandler(destroyProduct))
+productRouter.patch(
+	"/:id",
+	protectedHandler(updateProduct, requiresOwnership(prisma.product))
+)
+productRouter.delete(
+	"/:id",
+	protectedHandler(destroyProduct, requiresOwnership(prisma.product))
+)
 
 export const authRouter = Router()
 authRouter.post("/register", requiresGuest, asyncHandler(register))
@@ -65,9 +70,14 @@ export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(indexCategories))
 categoryRouter.get("/:name", asyncHandler(showCategory))
 categoryRouter.post("/", protectedHandler(storeCategory))
-categoryRouter.use(requiresOwnership(prisma.category))
-categoryRouter.patch("/:name", protectedHandler(updateCategory))
-categoryRouter.delete("/:name", protectedHandler(destroyCategory))
+categoryRouter.patch(
+	"/:name",
+	protectedHandler(updateCategory, requiresOwnership(prisma.category))
+)
+categoryRouter.delete(
+	"/:name",
+	protectedHandler(destroyCategory, requiresOwnership(prisma.category))
+)
 
 export const imageRouter = Router()
 imageRouter.post("/", protectedHandler(storeImage))
@@ -77,8 +87,13 @@ imageRouter.delete(
 )
 
 export const cartRouter = Router()
-cartRouter.use(requiresOwnership(prisma.cart))
-cartRouter.get("/", protectedHandler(cartIndex))
-cartRouter.post("/", protectedHandler(addItem))
-cartRouter.delete("/item", protectedHandler(removeIteam))
-cartRouter.delete("/", protectedHandler(clearCart))
+cartRouter.get("/", protectedHandler(cartIndex, requiresOwnership(prisma.cart)))
+cartRouter.post("/", protectedHandler(addItem, requiresOwnership(prisma.cart)))
+cartRouter.delete(
+	"/item",
+	protectedHandler(removeIteam, requiresOwnership(prisma.cart))
+)
+cartRouter.delete(
+	"/",
+	protectedHandler(clearCart, requiresOwnership(prisma.cart))
+)

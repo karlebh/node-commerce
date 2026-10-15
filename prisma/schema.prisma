@@ -20,6 +20,7 @@ model User {
   images       Image[]
   likes        Like[]
   cart         Cart?
+  orders       Order[]
 
   @@map("users")
 }
@@ -43,6 +44,7 @@ model Product {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
   cartItems   CartItem[]
+  orderItems  OrderItem[]
 
   @@index([userId])
   @@index([categoryId])
@@ -155,4 +157,49 @@ model Like {
   @@index([likeableId, likeableType, userId])
   @@unique([likeableId, likeableType, userId])
   @@map("likes")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id        String      @id @default(cuid(2))
+  userId    String
+  status    OrderStatus @default(PENDING)
+  total     Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String    @id @default(cuid(2))
+  orderId     String
+  productId   String
+  productName String
+  unitPrice   Int
+  quantity    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+  @@index([productId])
+  @@map("order_items")
 }
