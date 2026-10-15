@@ -42,7 +42,7 @@ export const index: RequestHandler = async (request, response) => {
 }
 
 export const show: RequestHandler = async (request, response) => {
-	const { slug } = showProductSchema.parse(request.params.slug)
+	const { slug } = showProductSchema.parse(request.params)
 
 	const product = await prisma.product.findUnique({ where: { slug } })
 
@@ -71,15 +71,13 @@ export const store: AuthenticatedHandler = async (request, response) => {
 
 export const update: RequestHandler = async (request, response) => {
 	const input = updateProductSchema.parse(request.body)
-
-	const id = request.params.id
-	if (typeof id !== "string") throw new AppError(404, "Product not found")
+	const { slug } = showProductSchema.parse(request.params)
 
 	const data = Object.fromEntries(
 		Object.entries(input).filter(([, value]) => value !== undefined)
 	) as Prisma.ProductUpdateInput
 
-	const product = await prisma.product.update({ where: { id }, data })
+	const product = await prisma.product.update({ where: { slug }, data })
 	response.status(200).json({ data: product })
 }
 
@@ -95,5 +93,3 @@ export const destroy: RequestHandler = async (request, response) => {
 
 	response.status(204).send()
 }
-
-export const more: RequestHandler = async (request, response) => {}

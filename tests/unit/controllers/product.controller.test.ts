@@ -24,7 +24,6 @@ type PaginationInput = {
 
 type CreateProductBody = {
 	name: string
-	slug: string
 	description: string
 	price: number
 	stock?: number
@@ -155,7 +154,6 @@ describe("Product Controller", () => {
 			userId: "user-123",
 			body: {
 				name: "Air Max 270",
-				slug: "air-max-270",
 				description: "A lightweight everyday sneaker.",
 				price: 1999,
 				stock: 10,
@@ -164,23 +162,29 @@ describe("Product Controller", () => {
 			},
 		}
 		const response = createControllerTestResponse()
-		const created = { id: "prod-1", ...request.body }
+		const created = {
+			id: "prod-1",
+			...request.body,
+			slug: "air-max-270-test",
+		}
 
 		mockPrisma.product.create.mockResolvedValue(created)
 
 		await invokeController(store, request, response)
 
 		expect(mockPrisma.product.create).toHaveBeenCalledWith({
-			data: {
+			data: expect.objectContaining({
 				name: "Air Max 270",
-				slug: "air-max-270",
+				slug: expect.stringMatching(
+					/^air-max-270-[0-9a-f-]{36}$/
+				),
 				description: "A lightweight everyday sneaker.",
 				price: 1999,
 				stock: 10,
 				imageUrl: "https://example.com/image.png",
 				user: { connect: { id: "user-123" } },
 				category: { connect: { id: "cat-123" } },
-			},
+			}),
 		})
 		expect(response.status).toHaveBeenCalledWith(201)
 		expect(response.json).toHaveBeenCalledWith({ data: created })
@@ -188,7 +192,7 @@ describe("Product Controller", () => {
 
 	it("updates only the provided product fields", async () => {
 		const request: ControllerTestRequest<UpdateProductBody> = {
-			params: { id: "prod-123" },
+			params: { slug: "air-max-270" },
 			body: { name: "Updated Name", price: 2500 },
 		}
 		const response = createControllerTestResponse()
@@ -199,7 +203,7 @@ describe("Product Controller", () => {
 		await invokeController(update, request, response)
 
 		expect(mockPrisma.product.update).toHaveBeenCalledWith({
-			where: { id: "prod-123" },
+			where: { slug: "air-max-270" },
 			data: { name: "Updated Name", price: 2500 },
 		})
 		expect(response.status).toHaveBeenCalledWith(200)
