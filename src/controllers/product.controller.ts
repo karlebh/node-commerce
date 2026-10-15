@@ -10,6 +10,7 @@ import {
 import { urlQuerySchema } from "../validations/url-query.schema.js"
 import { paginate } from "../lib/paginate.js"
 import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import { createSlug } from "../helpers/index.js"
 
 export const index: RequestHandler = async (request, response) => {
 	const { page, perPage, search } = urlQuerySchema.parse(request.query)
@@ -59,6 +60,7 @@ export const store: AuthenticatedHandler = async (request, response) => {
 	const data: Prisma.ProductCreateInput = {
 		...productFields,
 		...(imageUrl !== undefined && { imageUrl }),
+		slug: createSlug(productFields.name),
 		user: { connect: { id: userId } },
 		category: { connect: { id: categoryId } },
 	}

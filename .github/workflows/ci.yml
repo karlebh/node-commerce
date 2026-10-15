@@ -11,7 +11,7 @@ jobs:
             CI: "true"
             NODE_ENV: test
             APP_NAME: node-commerce
-            UPLOAD_DIR: ${{ runner.temp }}/node-commerce-uploads
+            UPLOAD_DIR: $RUNNER_TEMP/node-commerce-uploads
             JWT_SECRET: test-only-secret-for-ci-at-least-32-characters
             JWT_EXPIRES_IN: 15m
             SESSION_TTL_MS: "604800000"
@@ -28,6 +28,11 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
+
+            - name: Prepare upload dir
+              run: mkdir -p "$UPLOAD_DIR"
+              env:
+                  UPLOAD_DIR: $RUNNER_TEMP/node-commerce-uploads
 
             - name: Install dependencies
               run: npm ci
