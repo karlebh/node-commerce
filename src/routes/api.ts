@@ -42,7 +42,7 @@ import {
 
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
-productRouter.get("/:slug", asyncHandler(showProduct))
+productRouter.get("/:id", asyncHandler(showProduct))
 productRouter.post("/", protectedHandler(storeProduct))
 productRouter.use(requiresOwnership(prisma.product))
 productRouter.patch("/:id", protectedHandler(updateProduct))

@@ -8,6 +8,7 @@ import {
 } from "../validations/category.schema.js"
 import { createSlug } from "../helpers/index.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
+import type { Prisma } from "@prisma/client"
 
 export const index: RequestHandler = async (request, response) => {
 	const { page, perPage } = urlQuerySchema.parse(request.query)
@@ -44,13 +45,18 @@ export const show: RequestHandler = async (request, response) => {
 
 export const store: RequestHandler = async (request, response) => {
 	const { name } = createCategorySchema.parse(request.body)
-	const slug = createSlug(name)
 
+	const exists = await prisma.category.findUnique({ where: { name } })
+
+	if (exists) throw new AppError(409, "Category already exist")
+
+	const slug = createSlug(name)
+	const data: Prisma.CategoryCreateInput = {
+		name,
+		slug,
+	}
 	const category = await prisma.category.create({
-		data: {
-			name,
-			slug,
-		},
+		data,
 	})
 
 	return response.status(201).json({ data: { category } })

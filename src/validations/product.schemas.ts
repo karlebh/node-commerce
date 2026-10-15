@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { cuid2, z } from "zod"
 
 export const createProductSchema = z.object({
 	name: z.string().trim().min(2).max(150),
@@ -12,15 +12,12 @@ export const createProductSchema = z.object({
 export const updateProductSchema = z.object({
 	name: z.string().trim().min(2).max(150).optional(),
 	description: z.string().trim().min(10).max(5000).optional(),
-	price: z.number().int().nonnegative().optional(),
+	price: z.number().nonnegative().optional(),
 	stock: z.number().int().nonnegative().optional(),
 	imageUrl: z.string().url().optional(),
 	categoryId: z.string().optional(),
 })
 
-export const showProductSchema = z.object({
-	slug: z
-		.string()
-		.trim()
-		.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+export const productParamSchema = z.object({
+	id: cuid2(),
 })

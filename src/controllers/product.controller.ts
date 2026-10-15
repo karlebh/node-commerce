@@ -4,7 +4,7 @@ import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
 import {
 	createProductSchema,
-	showProductSchema,
+	productParamSchema,
 	updateProductSchema,
 } from "../validations/product.schemas.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
@@ -42,9 +42,9 @@ export const index: RequestHandler = async (request, response) => {
 }
 
 export const show: RequestHandler = async (request, response) => {
-	const { slug } = showProductSchema.parse(request.params)
+	const { id } = productParamSchema.parse(request.params)
 
-	const product = await prisma.product.findUnique({ where: { slug } })
+	const product = await prisma.product.findUnique({ where: { id } })
 
 	if (!product || !product.isActive)
 		throw new AppError(404, "Product not found")
@@ -55,6 +55,14 @@ export const show: RequestHandler = async (request, response) => {
 export const store: AuthenticatedHandler = async (request, response) => {
 	const { imageUrl, categoryId, ...productFields } =
 		createProductSchema.parse(request.body)
+
+	const category = await prisma.category.findUnique({
+		where: { id: categoryId },
+		select: { id: true },
+	})
+
+	if (!category) throw new AppError(404, "Category not found")
+
 	const userId = request.userId
 
 	const data: Prisma.ProductCreateInput = {
@@ -71,20 +79,22 @@ export const store: AuthenticatedHandler = async (request, response) => {
 
 export const update: RequestHandler = async (request, response) => {
 	const input = updateProductSchema.parse(request.body)
-	const { slug } = showProductSchema.parse(request.params)
+	const { id } = productParamSchema.parse(request.params)
 
 	const data = Object.fromEntries(
 		Object.entries(input).filter(([, value]) => value !== undefined)
 	) as Prisma.ProductUpdateInput
 
-	const product = await prisma.product.update({ where: { slug }, data })
+	const product = await prisma.product.update({
+		where: { id },
+		data,
+	})
+
 	response.status(200).json({ data: product })
 }
 
 export const destroy: RequestHandler = async (request, response) => {
-	const id = request.params.id
-
-	if (typeof id !== "string") throw new AppError(404, "Product not found")
+	const { id } = productParamSchema.parse(request.params)
 
 	await prisma.product.update({
 		where: { id },
