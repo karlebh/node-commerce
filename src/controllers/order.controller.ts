@@ -4,11 +4,11 @@ import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
 import { placeOrder } from "../services/order.service.js"
 import { AppError } from "../errors/AppError.js"
 import { paginate } from "../lib/paginate.js"
-import { indexOrderSchema } from "../validations/order.schema.js"
-
-const orderSchema = z.object({
-	id: z.cuid2(),
-})
+import {
+	indexOrderSchema,
+	orderSchema,
+	updateOrderschema,
+} from "../validations/order.schema.js"
 
 export const index: AuthenticatedHandler = async (request, response) => {
 	const { page, perPage, status } = indexOrderSchema.parse(request.query)
@@ -66,5 +66,28 @@ export const store: AuthenticatedHandler = async (request, response) => {
 
 	return response.status(201).json({ data: order })
 }
-export const update: AuthenticatedHandler = (request, response) => {}
-export const destroy: AuthenticatedHandler = (request, response) => {}
+export const update: AuthenticatedHandler = async (request, response) => {
+	const { id } = orderSchema.parse(request.params)
+	const { status } = updateOrderschema.parse(request.body)
+
+	const order = await prisma.order.update({
+		where: { id, userId: request.userId },
+		data: { status },
+	})
+
+	if (!order) throw new AppError(404, "Order not found")
+
+	return response
+		.status(200)
+		.json({ message: "Order updated successfully", order })
+}
+
+export const destroy: AuthenticatedHandler = async (request, response) => {
+	const { id } = orderSchema.parse(request.params)
+
+	await prisma.order.delete({
+		where: { id, userId: request.userId },
+	})
+
+	return response.status(200).json({ message: "Order deleted successfully" })
+}
