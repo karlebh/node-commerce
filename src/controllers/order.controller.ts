@@ -17,7 +17,10 @@ export const store: AuthenticatedHandler = async (request, response) => {
 		})
 
 		if (!cart || cart.items.length === 0) {
-			throw new AppError(422, "Cannot create an order from an empty cart.")
+			throw new AppError(
+				422,
+				"Cannot create an order from an empty cart."
+			)
 		}
 
 		const products = await tx.product.findMany({
@@ -31,7 +34,9 @@ export const store: AuthenticatedHandler = async (request, response) => {
 				deletedAt: true,
 			},
 		})
-		const productsById = new Map(products.map((product) => [product.id, product]))
+		const productsById = new Map(
+			products.map((product) => [product.id, product])
+		)
 
 		const invalidItems = cart.items.flatMap((item) => {
 			const product = productsById.get(item.productId)
@@ -42,9 +47,12 @@ export const store: AuthenticatedHandler = async (request, response) => {
 			}
 
 			if (!product) return [{ ...base, reason: "product_not_found" }]
-			if (product.deletedAt) return [{ ...base, reason: "product_deleted" }]
-			if (!product.isActive) return [{ ...base, reason: "product_inactive" }]
-			if (item.quantity < 1) return [{ ...base, reason: "invalid_quantity" }]
+			if (product.deletedAt)
+				return [{ ...base, reason: "product_deleted" }]
+			if (!product.isActive)
+				return [{ ...base, reason: "product_inactive" }]
+			if (item.quantity < 1)
+				return [{ ...base, reason: "invalid_quantity" }]
 			if (product.stock < item.quantity) {
 				return [
 					{
@@ -59,16 +67,25 @@ export const store: AuthenticatedHandler = async (request, response) => {
 		})
 
 		if (invalidItems.length > 0) {
-			throw new AppError(422, "One or more cart items cannot be ordered.", {
-				items: invalidItems,
-			})
+			throw new AppError(
+				422,
+				"One or more cart items cannot be ordered.",
+				{
+					items: invalidItems,
+				}
+			)
 		}
 
 		const orderItems = cart.items.map((item) => {
 			const product = productsById.get(item.productId)
 			if (!product) {
 				throw new AppError(422, "A cart product could not be found.", {
-					items: [{ productId: item.productId, reason: "product_not_found" }],
+					items: [
+						{
+							productId: item.productId,
+							reason: "product_not_found",
+						},
+					],
 				})
 			}
 
