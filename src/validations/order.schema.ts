@@ -13,3 +13,7 @@ export const orderSchema = z.object({
 export const updateOrderschema = z.object({
 	status: z.enum(OrderStatus),
 })
+
+export type IndexOrderQuery = z.infer<typeof indexOrderSchema>
+export type OrderParams = z.infer<typeof orderSchema>
+export type UpdateOrderInput = z.infer<typeof updateOrderschema>

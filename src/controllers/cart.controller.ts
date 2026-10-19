@@ -2,11 +2,12 @@ import {
 	createCartSchema,
 	destroyCartSchema,
 } from "../validations/cart.schema.js"
-import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import type { Response } from "express"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
 
-export const index: AuthenticatedHandler = async (request, response) => {
+export const index: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const cart = await prisma.cart.findUnique({
 		where: { userId: request.userId },
 		include: {
@@ -21,7 +22,7 @@ export const index: AuthenticatedHandler = async (request, response) => {
 		.json({ message: "Cart fetched successfully", cart })
 }
 
-export const addItem: AuthenticatedHandler = async (request, response) => {
+export const addItem: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const { productId, quantity } = createCartSchema.parse(request.body)
 
 	await prisma.$transaction(async (tx) => {
@@ -52,7 +53,7 @@ export const addItem: AuthenticatedHandler = async (request, response) => {
 		.json({ message: "Item added to cart succesfully" })
 }
 
-export const removeIteam: AuthenticatedHandler = async (request, response) => {
+export const removeIteam: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const { cartItemId } = destroyCartSchema.parse(request.params)
 
 	const deleted = await prisma.cartItem.delete({ where: { id: cartItemId } })
@@ -64,7 +65,7 @@ export const removeIteam: AuthenticatedHandler = async (request, response) => {
 		.json({ message: "Deleted cart item successfully" })
 }
 
-export const clearCart: AuthenticatedHandler = async (request, response) => {
+export const clearCart: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const items = await prisma.cartItem.deleteMany({
 		where: { cart: { userId: request.userId } },
 	})

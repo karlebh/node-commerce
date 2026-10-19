@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { type RequestHandler } from "express"
+import { type Request, type RequestHandler, type Response } from "express"
 import { prisma } from "../../database/prisma.js"
 import { AppError } from "../../errors/AppError.js"
 import {
@@ -8,9 +8,9 @@ import {
 } from "../../validations/auth.schemas.js"
 import { createSessionAndToken, publicUser } from "../../helpers/index.js"
 import { addEmailJob } from "../../jobs/emailQueue.js"
-import type { AuthenticatedHandler } from "../../middleware/protectedHandler.js"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../../middleware/protectedHandler.js"
 
-export const register: RequestHandler = async (request, response) => {
+export const register: RequestHandler = async (request: Request, response: Response) => {
 	registerUserSchema.parse(request.body)
 
 	const { username, email, password } = request.body
@@ -36,7 +36,7 @@ export const register: RequestHandler = async (request, response) => {
 		.json({ data: { user: publicUser(user), token } })
 }
 
-export const login: RequestHandler = async (request, response) => {
+export const login: RequestHandler = async (request: Request, response: Response) => {
 	const input = loginUserSchema.parse(request.body)
 	const user = await prisma.user.findUnique({
 		where: { email: input.email },
@@ -55,7 +55,7 @@ export const login: RequestHandler = async (request, response) => {
 	})
 }
 
-export const logout: AuthenticatedHandler = async (request, response) => {
+export const logout: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const sessionId = request.sessionId
 
 	await prisma.session.update({
@@ -66,7 +66,7 @@ export const logout: AuthenticatedHandler = async (request, response) => {
 	return response.status(200).json({ message: "Logout successful" })
 }
 
-export const me: AuthenticatedHandler = async (request, response) => {
+export const me: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const userId = request.userId
 	const user = await prisma.user.findUnique({ where: { id: userId } })
 	if (!user) throw new AppError(404, "User not found")

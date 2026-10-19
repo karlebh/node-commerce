@@ -1,12 +1,12 @@
-import type { ErrorRequestHandler } from "express"
+import type { ErrorRequestHandler, NextFunction, Request, Response } from "express"
 import { ZodError } from "zod"
 import { AppError } from "../errors/AppError.js"
 
 export const errorHandler: ErrorRequestHandler = (
-	error,
-	request,
-	response,
-	_next
+	error: any,
+	request: Request,
+	response: Response,
+	_next: NextFunction
 ) => {
 	if (error instanceof ZodError) {
 		response.status(422).json({

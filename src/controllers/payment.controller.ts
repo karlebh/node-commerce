@@ -1,10 +1,10 @@
-import type { RequestHandler } from "express"
+import type { NextFunction, Request, RequestHandler, Response } from "express"
 import { PaymentService } from "../services/payment.service.js"
 import { PaystackGateway } from "../gateways/paystack.js"
 
 // const paymentService = new PaymentService(new PaystackGateway())
 
-export const initializePayment: RequestHandler = async (req, res, next) => {
+export const initializePayment: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { email, amount } = req.body
 
@@ -16,7 +16,7 @@ export const initializePayment: RequestHandler = async (req, res, next) => {
 	}
 }
 
-export const verifyPayment: RequestHandler = async (req, res, next) => {
+export const verifyPayment: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { reference } = req.params
 

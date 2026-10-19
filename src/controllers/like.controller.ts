@@ -1,5 +1,5 @@
-import type { RequestHandler } from "express"
-import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import type { Request, RequestHandler, Response } from "express"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
 import { prisma } from "../database/prisma.js"
 import {
 	createLikeSchema,
@@ -7,7 +7,7 @@ import {
 } from "../validations/like.schema.js"
 import { resolvePolymorphic } from "../helpers/index.js"
 
-export const like: AuthenticatedHandler = async (request, response) => {
+export const like: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const { likeableId, likeableType } = createLikeSchema.parse(request.body)
 
 	const userId = request.userId
@@ -40,7 +40,7 @@ export const like: AuthenticatedHandler = async (request, response) => {
 		.json({ message: "Like created successfully", like })
 }
 
-export const unlike: RequestHandler = async (request, response) => {
+export const unlike: RequestHandler = async (request: Request, response: Response) => {
 	const { likeId } = destroyLikeSchema.parse(request.params)
 
 	await prisma.like.delete({

@@ -6,7 +6,7 @@ import { uploader, UPLOAD_DIR } from "../configs/multer.js"
 import { prisma } from "../database/prisma.js"
 import { deleteImageSchema, imageSchema } from "../validations/media.schema.js"
 import { AppError } from "../errors/AppError.js"
-import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
 import { isErrnoException, resolvePolymorphic } from "../helpers/index.js"
 
 const singleUpload = uploader.single("file")
@@ -38,7 +38,7 @@ const removeFile = async (filePath: string): Promise<void> => {
 	}
 }
 
-export const store: AuthenticatedHandler = async (request, response) => {
+export const store: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	await runUpload(request, response)
 
 	const file = request.file
@@ -78,7 +78,7 @@ export const store: AuthenticatedHandler = async (request, response) => {
 	}
 }
 
-export const destroy: AuthenticatedHandler = async (request, response) => {
+export const destroy: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const { id } = deleteImageSchema.parse(request.body)
 
 	const image = await prisma.image.findFirst({

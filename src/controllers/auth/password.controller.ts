@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express"
+import type { Request, RequestHandler, Response } from "express"
 import {
 	changePasswordSchema,
 	confirmPasswordResetBodySchema,
@@ -11,9 +11,9 @@ import bcrypt from "bcryptjs"
 import { createHash, randomBytes } from "crypto"
 import { addEmailJob } from "../../jobs/emailQueue.js"
 import { env } from "../../configs/env.js"
-import type { AuthenticatedHandler } from "../../middleware/protectedHandler.js"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../../middleware/protectedHandler.js"
 
-export const change: AuthenticatedHandler = async (request, response) => {
+export const change: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const userId = request.userId
 
 	const { current_password, password } = changePasswordSchema.parse(
@@ -48,7 +48,7 @@ export const change: AuthenticatedHandler = async (request, response) => {
 	})
 }
 
-export const reset: RequestHandler = async (request, response) => {
+export const reset: RequestHandler = async (request: Request, response: Response) => {
 	const { email } = resetPasswordSchema.parse(request.body)
 
 	const user = await prisma.user.findUnique({
@@ -82,7 +82,7 @@ export const reset: RequestHandler = async (request, response) => {
 	})
 }
 
-export const confirmReset: RequestHandler = async (request, response) => {
+export const confirmReset: RequestHandler = async (request: Request, response: Response) => {
 	const { token } = confirmPasswordResetTokenSchema.parse(request.params)
 	const { password } = confirmPasswordResetBodySchema.parse(request.body)
 

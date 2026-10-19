@@ -57,7 +57,7 @@ const runMiddlewareChain = (
 
 export const protectedHandler =
 	(handler: AuthenticatedHandler, ...middlewares: RequestHandler[]): RequestHandler =>
-	(request, response, next) => {
+	(request: Request, response: Response, next: NextFunction) => {
 		requiresAuth(request, response, (error?: unknown) => {
 			if (error) {
 				next(error)

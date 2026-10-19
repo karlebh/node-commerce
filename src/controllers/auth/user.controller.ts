@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express"
+import type { Request, RequestHandler, Response } from "express"
 
-export const people: RequestHandler = async (request, response) => {}
-export const update: RequestHandler = async (request, response) => {}
+export const people: RequestHandler = async (request: Request, response: Response) => {}
+export const update: RequestHandler = async (request: Request, response: Response) => {}

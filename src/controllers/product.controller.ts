@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express"
+import type { Request, RequestHandler, Response } from "express"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
@@ -9,10 +9,10 @@ import {
 } from "../validations/product.schemas.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
 import { paginate } from "../lib/paginate.js"
-import type { AuthenticatedHandler } from "../middleware/protectedHandler.js"
+import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
 import { createSlug } from "../helpers/index.js"
 
-export const index: RequestHandler = async (request, response) => {
+export const index: RequestHandler = async (request: Request, response: Response) => {
 	const { page, perPage, search } = urlQuerySchema.parse(request.query)
 
 	const where = {
@@ -41,7 +41,7 @@ export const index: RequestHandler = async (request, response) => {
 	)
 }
 
-export const show: RequestHandler = async (request, response) => {
+export const show: RequestHandler = async (request: Request, response: Response) => {
 	const { id } = productParamSchema.parse(request.params)
 
 	const product = await prisma.product.findUnique({ where: { id } })
@@ -52,7 +52,7 @@ export const show: RequestHandler = async (request, response) => {
 	response.json({ data: product })
 }
 
-export const store: AuthenticatedHandler = async (request, response) => {
+export const store: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
 	const { imageUrl, categoryId, ...productFields } =
 		createProductSchema.parse(request.body)
 
@@ -77,7 +77,7 @@ export const store: AuthenticatedHandler = async (request, response) => {
 	response.status(201).json({ data: product })
 }
 
-export const update: RequestHandler = async (request, response) => {
+export const update: RequestHandler = async (request: Request, response: Response) => {
 	const input = updateProductSchema.parse(request.body)
 	const { id } = productParamSchema.parse(request.params)
 
@@ -97,7 +97,7 @@ export const update: RequestHandler = async (request, response) => {
 	response.status(200).json({ data: product })
 }
 
-export const destroy: RequestHandler = async (request, response) => {
+export const destroy: RequestHandler = async (request: Request, response: Response) => {
 	const { id } = productParamSchema.parse(request.params)
 
 	await prisma.product.delete({

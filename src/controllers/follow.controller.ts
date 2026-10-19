@@ -1,6 +1,6 @@
-import type { RequestHandler } from "express"
+import type { Request, RequestHandler, Response } from "express"
 
-export const follow: RequestHandler = (request, response) => {
+export const follow: RequestHandler = (request: Request, response: Response) => {
 	//
 }
-export const unfollow: RequestHandler = (request, response) => {}
+export const unfollow: RequestHandler = (request: Request, response: Response) => {}

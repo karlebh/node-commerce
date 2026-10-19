@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express"
+import type { NextFunction, Request, RequestHandler, Response } from "express"
 import { AppError } from "../errors/AppError.js"
 import { isAuthenticatedRequest } from "../types/authenticated-request.js"
 
@@ -8,7 +8,7 @@ type Delegate = {
 
 export const requiresOwnership =
 	(model: Delegate, ownerField = "userId"): RequestHandler =>
-	async (request, response, next) => {
+	async (request: Request, response: Response, next: NextFunction) => {
 		try {
 			if (!isAuthenticatedRequest(request)) {
 				throw new AppError(401, "Authentication required")

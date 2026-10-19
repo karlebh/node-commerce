@@ -1,5 +1,5 @@
 import cors from "cors"
-import express from "express"
+import express, { type Request, type Response } from "express"
 import helmet from "helmet"
 import { pinoHttp } from "pino-http"
 import { env } from "./configs/env.js"
@@ -24,7 +24,7 @@ app.use(express.json({ limit: "1mb" }))
 app.use(pinoHttp({ logger }))
 app.use("/api", apiRateLimiter)
 
-app.get("/health", (_request, response) => response.json({ status: "ok" }))
+app.get("/health", (_request: Request, response: Response) => response.json({ status: "ok" }))
 app.use("/api/auth", authRouter)
 app.use("/api/categories", categoryRouter)
 app.use("/api/products", productRouter)

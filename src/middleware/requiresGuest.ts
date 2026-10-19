@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express"
+import type { NextFunction, Request, RequestHandler, Response } from "express"
 import jwt from "jsonwebtoken"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
@@ -14,9 +14,9 @@ const verifyToken = (token: string): Payload | null => {
 }
 
 export const requiresGuest: RequestHandler = async (
-	request,
-	_response,
-	next
+	request: Request,
+	_response: Response,
+	next: NextFunction
 ) => {
 	try {
 		const header = request.headers.authorization
