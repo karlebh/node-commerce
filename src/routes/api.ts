@@ -40,6 +40,12 @@ import {
 	clearCart,
 } from "../controllers/cart.controller.js"
 
+import {
+	index as orderIndex,
+	show as showOrder,
+	store as storeOrder,
+} from "../controllers/order.controller.js"
+
 export const productRouter = Router()
 productRouter.get("/", asyncHandler(indexProducts))
 productRouter.get("/:id", asyncHandler(showProduct))
@@ -90,10 +96,20 @@ export const cartRouter = Router()
 cartRouter.get("/", protectedHandler(cartIndex, requiresOwnership(prisma.cart)))
 cartRouter.post("/", protectedHandler(addItem, requiresOwnership(prisma.cart)))
 cartRouter.delete(
-	"/item",
+	"/:id",
 	protectedHandler(removeIteam, requiresOwnership(prisma.cart))
 )
 cartRouter.delete(
-	"/",
+	"/clear",
 	protectedHandler(clearCart, requiresOwnership(prisma.cart))
+)
+
+export const orderRouter = Router()
+orderRouter.get(
+	"/",
+	protectedHandler(orderIndex, requiresOwnership(prisma.order))
+)
+orderRouter.get(
+	"/:id",
+	protectedHandler(orderIndex, requiresOwnership(prisma.order))
 )
