@@ -9,23 +9,37 @@ import type {
 } from "../middleware/protectedHandler.js"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
+import { paginate } from "../lib/paginate.js"
+import { urlQuerySchema } from "../validations/url-query.schema.js"
 
 export const index: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
 	response: Response
 ): Promise<Response> => {
+	const { page, perPage } = urlQuerySchema.parse(request.query)
+
 	const cart = await prisma.cart.findUnique({
 		where: { userId: request.userId },
 		include: {
+			_count: { select: { items: true } },
 			items: {
+				skip: (page - 1) * perPage,
+				take: perPage,
+				orderBy: { createdAt: "desc" },
 				include: { product: true },
 			},
 		},
 	})
 
-	return response
-		.status(200)
-		.json({ message: "Cart fetched successfully", cart })
+	return response.status(200).json(
+		paginate({
+			request,
+			data: cart?.items ?? [],
+			total: cart?._count.items ?? 0,
+			page,
+			perPage,
+		})
+	)
 }
 
 export const addItem: AuthenticatedHandler = async (
@@ -66,9 +80,9 @@ export const removeIteam: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
 	response: Response
 ): Promise<Response> => {
-	const { cartItemId } = destroyCartSchema.parse(request.params)
+	const { id } = destroyCartSchema.parse(request.params)
 
-	const deleted = await prisma.cartItem.delete({ where: { id: cartItemId } })
+	const deleted = await prisma.cartItem.delete({ where: { id } })
 
 	if (!deleted) throw new AppError(500, "Error deleting cart itme")
 

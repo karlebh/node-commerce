@@ -1,115 +1,123 @@
 import { Router } from "express"
-import {
-	destroy as destroyProduct,
-	index as indexProducts,
-	show as showProduct,
-	store as storeProduct,
-	update as updateProduct,
-} from "../controllers/product.controller.js"
-import {
-	destroy as destroyCategory,
-	index as indexCategories,
-	show as showCategory,
-	store as storeCategory,
-	update as updateCategory,
-} from "../controllers/category.controller.js"
+import * as productController from "../controllers/product.controller.js"
+import * as categoryController from "../controllers/category.controller.js"
+import * as authController from "../controllers/auth/auth.controller.js"
+import * as passwordController from "../controllers/auth/password.controller.js"
+import * as imageController from "../controllers/image.controller.js"
+import * as cartController from "../controllers/cart.controller.js"
+import * as orderController from "../controllers/order.controller.js"
+import * as notificationController from "../controllers/notification.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
-import {
-	login,
-	logout,
-	me,
-	register,
-} from "../controllers/auth/auth.controller.js"
-import {
-	change,
-	confirmReset,
-	reset,
-} from "../controllers/auth/password.controller.js"
-import {
-	store as storeImage,
-	destroy as destroyImage,
-} from "../controllers/image.controller.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
-import { prisma } from "../database/prisma.js"
 import { requiresGuest } from "../middleware/requiresGuest.js"
-import {
-	index as cartIndex,
-	addItem,
-	removeIteam,
-	clearCart,
-} from "../controllers/cart.controller.js"
-
-import {
-	index as orderIndex,
-	show as showOrder,
-	store as storeOrder,
-} from "../controllers/order.controller.js"
+import { prisma } from "../database/prisma.js"
 
 export const productRouter = Router()
-productRouter.get("/", asyncHandler(indexProducts))
-productRouter.get("/:id", asyncHandler(showProduct))
-productRouter.post("/", protectedHandler(storeProduct))
+productRouter.get("/", asyncHandler(productController.index))
+productRouter.get("/:id", asyncHandler(productController.show))
+productRouter.post("/", protectedHandler(productController.store))
 productRouter.patch(
 	"/:id",
-	protectedHandler(updateProduct, requiresOwnership(prisma.product))
+	protectedHandler(
+		productController.update,
+		requiresOwnership(prisma.product)
+	)
 )
 productRouter.delete(
 	"/:id",
-	protectedHandler(destroyProduct, requiresOwnership(prisma.product))
+	protectedHandler(
+		productController.destroy,
+		requiresOwnership(prisma.product)
+	)
 )
 
 export const authRouter = Router()
-authRouter.post("/register", requiresGuest, asyncHandler(register))
-authRouter.post("/login", requiresGuest, asyncHandler(login))
-authRouter.post("/reset-password", requiresGuest, asyncHandler(reset))
+authRouter.post(
+	"/register",
+	requiresGuest,
+	asyncHandler(authController.register)
+)
+authRouter.post("/login", requiresGuest, asyncHandler(authController.login))
+authRouter.post(
+	"/reset-password",
+	requiresGuest,
+	asyncHandler(passwordController.reset)
+)
 authRouter.post(
 	"/confirm-password-reset",
 	requiresGuest,
-	asyncHandler(confirmReset)
+	asyncHandler(passwordController.confirmReset)
 )
-authRouter.get("/me", protectedHandler(me))
-authRouter.post("/logout", protectedHandler(logout))
-authRouter.patch("/change-password", protectedHandler(change))
+authRouter.get("/me", protectedHandler(authController.me))
+authRouter.post("/logout", protectedHandler(authController.logout))
+authRouter.patch(
+	"/change-password",
+	protectedHandler(passwordController.change)
+)
 
 export const categoryRouter = Router()
-categoryRouter.get("/", asyncHandler(indexCategories))
-categoryRouter.get("/:name", asyncHandler(showCategory))
-categoryRouter.post("/", protectedHandler(storeCategory))
+categoryRouter.get("/", asyncHandler(categoryController.index))
+categoryRouter.get("/:name", asyncHandler(categoryController.show))
+categoryRouter.post("/", protectedHandler(categoryController.store))
 categoryRouter.patch(
 	"/:name",
-	protectedHandler(updateCategory, requiresOwnership(prisma.category))
+	protectedHandler(
+		categoryController.update,
+		requiresOwnership(prisma.category)
+	)
 )
 categoryRouter.delete(
 	"/:name",
-	protectedHandler(destroyCategory, requiresOwnership(prisma.category))
+	protectedHandler(
+		categoryController.destroy,
+		requiresOwnership(prisma.category)
+	)
 )
 
 export const imageRouter = Router()
-imageRouter.post("/", protectedHandler(storeImage))
+imageRouter.post("/", protectedHandler(imageController.store))
 imageRouter.delete(
 	"/:id",
-	protectedHandler(destroyImage, requiresOwnership(prisma.image))
+	protectedHandler(imageController.destroy, requiresOwnership(prisma.image))
 )
 
 export const cartRouter = Router()
-cartRouter.get("/", protectedHandler(cartIndex, requiresOwnership(prisma.cart)))
-cartRouter.post("/", protectedHandler(addItem, requiresOwnership(prisma.cart)))
+cartRouter.get(
+	"/",
+	protectedHandler(cartController.index, requiresOwnership(prisma.cart))
+)
+cartRouter.post(
+	"/",
+	protectedHandler(cartController.addItem, requiresOwnership(prisma.cart))
+)
 cartRouter.delete(
 	"/:id",
-	protectedHandler(removeIteam, requiresOwnership(prisma.cart))
+	protectedHandler(cartController.removeIteam, requiresOwnership(prisma.cart))
 )
 cartRouter.delete(
 	"/clear",
-	protectedHandler(clearCart, requiresOwnership(prisma.cart))
+	protectedHandler(cartController.clearCart, requiresOwnership(prisma.cart))
 )
 
 export const orderRouter = Router()
 orderRouter.get(
 	"/",
-	protectedHandler(orderIndex, requiresOwnership(prisma.order))
+	protectedHandler(orderController.index, requiresOwnership(prisma.order))
 )
 orderRouter.get(
 	"/:id",
-	protectedHandler(orderIndex, requiresOwnership(prisma.order))
+	protectedHandler(orderController.show, requiresOwnership(prisma.order))
+)
+orderRouter.post(
+	"/",
+	protectedHandler(orderController.store, requiresOwnership(prisma.order))
+)
+orderRouter.put(
+	"/:id",
+	protectedHandler(orderController.update, requiresOwnership(prisma.order))
+)
+orderRouter.delete(
+	"/",
+	protectedHandler(orderController.destroy, requiresOwnership(prisma.order))
 )

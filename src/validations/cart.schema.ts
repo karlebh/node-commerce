@@ -6,5 +6,5 @@ export const createCartSchema = z.object({
 })
 
 export const destroyCartSchema = z.object({
-	cartItemId: z.cuid2(),
+	id: z.cuid2(),
 })

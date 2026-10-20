@@ -1,4 +1,3 @@
-import z from "zod"
 import { prisma } from "../database/prisma.js"
 import type { Response } from "express"
 import type {

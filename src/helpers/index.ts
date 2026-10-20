@@ -10,12 +10,14 @@ export const createSlug = (name: string): string => {
 		.replace(/[^\w-]/g, "")}-${crypto.randomUUID()}`
 }
 
-export const publicUser = (user: {
+type PublicUser = {
 	id: string
 	username: string
 	email: string
 	createdAt: Date
-): { id: string; username: string; email: string; createdAt: Date } => ({
+}
+
+export const publicUser = (user: PublicUser): PublicUser => ({
 	id: user.id,
 	username: user.username,
 	email: user.email,
