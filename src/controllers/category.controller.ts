@@ -10,7 +10,10 @@ import { createSlug } from "../helpers/index.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
 import type { Prisma } from "@prisma/client"
 
-export const index: RequestHandler = async (request: Request, response: Response) => {
+export const index: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { page, perPage } = urlQuerySchema.parse(request.query)
 
 	const [categories, total] = await Promise.all([
@@ -33,7 +36,10 @@ export const index: RequestHandler = async (request: Request, response: Response
 	)
 }
 
-export const show: RequestHandler = async (request: Request, response: Response) => {
+export const show: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { id } = categoryParamsSchema.parse(request.params)
 	if (typeof id !== "string") throw new AppError(404, "Not found")
 
@@ -43,7 +49,10 @@ export const show: RequestHandler = async (request: Request, response: Response)
 	return response.status(200).json({ data: { category } })
 }
 
-export const store: RequestHandler = async (request: Request, response: Response) => {
+export const store: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { name } = createCategorySchema.parse(request.body)
 
 	const exists = await prisma.category.findUnique({ where: { name } })
@@ -62,7 +71,10 @@ export const store: RequestHandler = async (request: Request, response: Response
 	return response.status(201).json({ data: { category } })
 }
 
-export const update: RequestHandler = async (request: Request, response: Response) => {
+export const update: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { id } = categoryParamsSchema.parse(request.params)
 	const { name } = createCategorySchema.parse(request.body)
 
@@ -74,7 +86,10 @@ export const update: RequestHandler = async (request: Request, response: Respons
 	return response.status(200).json({ data: { category } })
 }
 
-export const destroy: RequestHandler = async (request: Request, response: Response) => {
+export const destroy: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { id } = categoryParamsSchema.parse(request.params)
 
 	const category = await prisma.category.findUnique({ where: { id } })

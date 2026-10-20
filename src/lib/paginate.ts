@@ -50,7 +50,7 @@ export function paginate<T>({
 			Object.entries(request.query).filter(([k]) => k !== "page")
 		) as Record<string, QueryValue>)
 
-	const buildUrl = (p: number) => {
+	const buildUrl = (p: number): string => {
 		const params = new URLSearchParams()
 		for (const [key, value] of Object.entries(baseQuery)) {
 			if (value === undefined || value === "") continue

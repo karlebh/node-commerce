@@ -1,7 +1,10 @@
 import z from "zod"
 import { prisma } from "../database/prisma.js"
 import type { Response } from "express"
-import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
+import type {
+	AuthenticatedHandler,
+	AuthenticatedRequest,
+} from "../middleware/protectedHandler.js"
 import { placeOrder } from "../services/order.service.js"
 import { AppError } from "../errors/AppError.js"
 import { paginate } from "../lib/paginate.js"
@@ -11,7 +14,10 @@ import {
 	updateOrderschema,
 } from "../validations/order.schema.js"
 
-export const index: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const index: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	const { page, perPage, status } = indexOrderSchema.parse(request.query)
 
 	const where = { userId: request.userId, ...(status && { status }) }
@@ -44,7 +50,10 @@ export const index: AuthenticatedHandler = async (request: AuthenticatedRequest,
 	)
 }
 
-export const show: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const show: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	const { id } = orderSchema.parse(request.params)
 	const order = await prisma.order.findUnique({
 		where: { id, userId: request.userId },
@@ -62,12 +71,18 @@ export const show: AuthenticatedHandler = async (request: AuthenticatedRequest, 
 		.json({ message: "Order fetched successfully", order })
 }
 
-export const store: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const store: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	const order = await placeOrder(request.userId)
 
 	return response.status(201).json({ data: order })
 }
-export const update: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const update: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+) => {
 	const { id } = orderSchema.parse(request.params)
 	const { status } = updateOrderschema.parse(request.body)
 
@@ -83,7 +98,10 @@ export const update: AuthenticatedHandler = async (request: AuthenticatedRequest
 		.json({ message: "Order updated successfully", order })
 }
 
-export const destroy: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const destroy: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	const { id } = orderSchema.parse(request.params)
 
 	await prisma.order.delete({

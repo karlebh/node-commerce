@@ -18,7 +18,7 @@ const CATEGORY_NAMES = [
 	"Pet Supplies",
 ]
 
-const slugify = (value: string) =>
+const slugify = (value: string): string =>
 	value
 		.toLowerCase()
 		.trim()

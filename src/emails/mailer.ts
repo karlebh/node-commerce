@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const loadTemplate = (name: string) => {
+const loadTemplate = (name: string): Handlebars.TemplateDelegate => {
 	const source = fs.readFileSync(
 		path.join(__dirname, "templates", `${name}.hbs`),
 		"utf8"
@@ -28,7 +28,7 @@ const loadTemplate = (name: string) => {
 
 const resetPasswordTemplate = loadTemplate("reset-password")
 
-export async function sendPasswordResetEmail(email: string, token: string) {
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
 	const resetUrl = `${env.APP_URL ?? env.FRONTEND_URL}/reset-password?token=${token}`
 
 	await transporter.sendMail({
@@ -41,7 +41,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 
 const registerTemplate = loadTemplate("register")
 
-export async function sendRegisterEmail(email: string, name: string) {
+export async function sendRegisterEmail(email: string, name: string): Promise<void> {
 	const loginUrl = `${env.APP_URL ?? env.FRONTEND_URL}/login`
 
 	await transporter.sendMail({
@@ -58,7 +58,7 @@ export async function sendResetPasswordSuccessEmail(
 	email: string,
 	username: string,
 	appName: string
-) {
+): Promise<void> {
 	await transporter.sendMail({
 		from: process.env.MAIL_FROM,
 		to: email,

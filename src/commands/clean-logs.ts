@@ -11,7 +11,7 @@ export const cleanLogs: CommandModule<{}, Args> = {
 	command: "clean-logs",
 	describe: "Delete old log files",
 	builder: (y) => y.option("days", { type: "number", default: 7 }),
-	handler: async ({ days }) => {
+	handler: async ({ days }): Promise<void> => {
 		const dir = path.join(__dirname, "../../logs")
 		const cutoff = Date.now() - days * 86400000
 

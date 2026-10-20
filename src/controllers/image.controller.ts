@@ -6,7 +6,10 @@ import { uploader, UPLOAD_DIR } from "../configs/multer.js"
 import { prisma } from "../database/prisma.js"
 import { deleteImageSchema, imageSchema } from "../validations/media.schema.js"
 import { AppError } from "../errors/AppError.js"
-import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
+import type {
+	AuthenticatedHandler,
+	AuthenticatedRequest,
+} from "../middleware/protectedHandler.js"
 import { isErrnoException, resolvePolymorphic } from "../helpers/index.js"
 
 const singleUpload = uploader.single("file")
@@ -38,7 +41,10 @@ const removeFile = async (filePath: string): Promise<void> => {
 	}
 }
 
-export const store: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const store: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	await runUpload(request, response)
 
 	const file = request.file
@@ -69,7 +75,7 @@ export const store: AuthenticatedHandler = async (request: AuthenticatedRequest,
 			return { ...created, owner }
 		})
 
-		response
+		return response
 			.status(201)
 			.json({ message: "Image upload successful", data: { image } })
 	} catch (err) {
@@ -78,7 +84,10 @@ export const store: AuthenticatedHandler = async (request: AuthenticatedRequest,
 	}
 }
 
-export const destroy: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const destroy: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
 	const { id } = deleteImageSchema.parse(request.body)
 
 	const image = await prisma.image.findFirst({
@@ -91,5 +100,5 @@ export const destroy: AuthenticatedHandler = async (request: AuthenticatedReques
 
 	await removeFile(path.join(UPLOAD_DIR, path.basename(image.url)))
 
-	response.status(200).json({ message: "Image deleted successfully" })
+	return response.status(200).json({ message: "Image deleted successfully" })
 }

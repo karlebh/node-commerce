@@ -6,7 +6,7 @@ type Args = { user: string; queue: boolean }
 export const sendEmails: CommandModule<{}, Args> = {
 	command: "send-emails <user>",
 	describe: "Send emails to a user",
-	builder: (y) =>
+	builder: (y): void =>
 		y
 			.positional("user", {
 				type: "string",
@@ -14,7 +14,7 @@ export const sendEmails: CommandModule<{}, Args> = {
 				describe: "User ID",
 			})
 			.option("queue", { alias: "q", type: "boolean", default: false }),
-	handler: async ({ user, queue }) => {
+	handler: async ({ user, queue }): Promise<void> => {
 		console.log(`Sending emails to ${user}${queue ? " (queued)" : ""}...`)
 		await mailer.sendToUser(user, { queue })
 		console.log("Done.")

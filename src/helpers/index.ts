@@ -15,14 +15,14 @@ export const publicUser = (user: {
 	username: string
 	email: string
 	createdAt: Date
-}) => ({
+): { id: string; username: string; email: string; createdAt: Date } => ({
 	id: user.id,
 	username: user.username,
 	email: user.email,
 	createdAt: user.createdAt,
 })
 
-export const createSessionAndToken = async (userId: string) => {
+export const createSessionAndToken = async (userId: string): Promise<string> => {
 	const expiresAt = new Date(Date.now() + env.SESSION_TTL_MS)
 	const session = await prisma.session.create({ data: { userId, expiresAt } })
 	const token = jwt.sign({}, env.JWT_SECRET, {
@@ -44,7 +44,11 @@ const polymorphicResolvers = {
 
 export type PolymorphicType = keyof typeof polymorphicResolvers
 
-export async function resolvePolymorphic(tx: Tx, type: string, id: string) {
+export async function resolvePolymorphic(
+	tx: Tx,
+	type: string,
+	id: string
+): Promise<{ id: string } | null> {
 	const resolver = polymorphicResolvers[type as PolymorphicType]
 	if (!resolver) return null
 	return resolver(tx, id)

@@ -8,7 +8,7 @@ type Delegate = {
 
 export const requiresOwnership =
 	(model: Delegate, ownerField = "userId"): RequestHandler =>
-	async (request: Request, response: Response, next: NextFunction) => {
+	async (request: Request, response: Response, next: NextFunction): Promise<void> => {
 		try {
 			if (!isAuthenticatedRequest(request)) {
 				throw new AppError(401, "Authentication required")

@@ -24,7 +24,7 @@ export const emailQueue = new Queue("email", {
 export const addEmailJob = <K extends keyof EmailJobs>(
 	name: K,
 	data: EmailJobs[K]
-) => emailQueue.add(name, data).then((job) => {
+): Promise<import("bullmq").Job> => emailQueue.add(name, data).then((job) => {
 	console.info(`Queued email job ${job.name} (${job.id})`)
 	return job
 }).then((job) => {

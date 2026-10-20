@@ -5,7 +5,7 @@ const passwordConfirmationSchema = z.string().min(1)
 const normalizePasswordConfirmation = (
 	value: string | undefined,
 	otherValue: string | undefined
-) => value ?? otherValue
+): string | undefined => value ?? otherValue
 
 const baseRegisterFieldsSchema = z.object({
 	username: z.string().trim().min(2).max(20),

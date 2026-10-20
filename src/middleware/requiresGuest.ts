@@ -17,7 +17,7 @@ export const requiresGuest: RequestHandler = async (
 	request: Request,
 	_response: Response,
 	next: NextFunction
-) => {
+): Promise<void> => {
 	try {
 		const header = request.headers.authorization
 		const token = header?.startsWith("Bearer ") ? header.slice(7) : null

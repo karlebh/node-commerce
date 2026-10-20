@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client"
 import { AppError } from "../errors/AppError.js"
 import { prisma } from "../database/prisma.js"
 
@@ -8,7 +9,7 @@ type InvalidOrderItem = {
 	availableStock?: number
 }
 
-export const placeOrder = async (userId: string) =>
+export const placeOrder = async (userId: string): Promise<Prisma.OrderGetPayload<{ include: { items: true } }>> =>
 	prisma.$transaction(async (tx) => {
 		const cart = await tx.cart.findUnique({
 			where: { userId },

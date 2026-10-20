@@ -9,7 +9,7 @@ import type { EmailJobs } from "./emailQueue.js"
 
 export const emailWorker = new Worker(
 	"email",
-	async (job) => {
+	async (job): Promise<void> => {
 		switch (job.name) {
 			case "password-reset": {
 				const { email, token } = job.data as EmailJobs["password-reset"]

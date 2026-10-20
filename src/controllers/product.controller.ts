@@ -9,10 +9,16 @@ import {
 } from "../validations/product.schemas.js"
 import { urlQuerySchema } from "../validations/url-query.schema.js"
 import { paginate } from "../lib/paginate.js"
-import type { AuthenticatedHandler, AuthenticatedRequest } from "../middleware/protectedHandler.js"
+import type {
+	AuthenticatedHandler,
+	AuthenticatedRequest,
+} from "../middleware/protectedHandler.js"
 import { createSlug } from "../helpers/index.js"
 
-export const index: RequestHandler = async (request: Request, response: Response) => {
+export const index: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { page, perPage, search } = urlQuerySchema.parse(request.query)
 
 	const where = {
@@ -41,7 +47,10 @@ export const index: RequestHandler = async (request: Request, response: Response
 	)
 }
 
-export const show: RequestHandler = async (request: Request, response: Response) => {
+export const show: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { id } = productParamSchema.parse(request.params)
 
 	const product = await prisma.product.findUnique({ where: { id } })
@@ -49,10 +58,13 @@ export const show: RequestHandler = async (request: Request, response: Response)
 	if (!product || !product.isActive)
 		throw new AppError(404, "Product not found")
 
-	response.json({ data: product })
+	return response.json({ data: product })
 }
 
-export const store: AuthenticatedHandler = async (request: AuthenticatedRequest, response: Response) => {
+export const store: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+) => {
 	const { imageUrl, categoryId, ...productFields } =
 		createProductSchema.parse(request.body)
 
@@ -77,7 +89,10 @@ export const store: AuthenticatedHandler = async (request: AuthenticatedRequest,
 	response.status(201).json({ data: product })
 }
 
-export const update: RequestHandler = async (request: Request, response: Response) => {
+export const update: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const input = updateProductSchema.parse(request.body)
 	const { id } = productParamSchema.parse(request.params)
 
@@ -94,15 +109,18 @@ export const update: RequestHandler = async (request: Request, response: Respons
 		data,
 	})
 
-	response.status(200).json({ data: product })
+	return response.status(200).json({ data: product })
 }
 
-export const destroy: RequestHandler = async (request: Request, response: Response) => {
+export const destroy: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
 	const { id } = productParamSchema.parse(request.params)
 
 	await prisma.product.delete({
 		where: { id },
 	})
 
-	response.status(200).json({ message: "Product deleted succesfully" })
+	return response.status(200).json({ message: "Product deleted succesfully" })
 }

@@ -9,7 +9,7 @@ export const requiresAuth: RequestHandler = async (
 	request: Request,
 	_response: Response,
 	next: NextFunction
-) => {
+): Promise<void> => {
 	try {
 		const header = request.headers.authorization
 		if (!header?.startsWith("Bearer ")) {
