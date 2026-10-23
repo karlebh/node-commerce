@@ -14,9 +14,14 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
-		"db:generate": "prisma generate",
-		"db:migrate": "prisma migrate dev",
-		"db:studio": "prisma studio"
+		"prisma": "node scripts/prisma-guard.mjs",
+		"postinstall": "node scripts/install-prisma-guard.mjs",
+		"db:generate": "node scripts/prisma-guard.mjs generate",
+		"db:migrate": "node scripts/prisma-guard.mjs migrate dev",
+		"db:deploy": "node scripts/prisma-guard.mjs migrate deploy",
+		"db:reset": "node scripts/prisma-guard.mjs migrate reset",
+		"db:push": "node scripts/prisma-guard.mjs db push",
+		"db:studio": "node scripts/prisma-guard.mjs studio"
 	},
 	"keywords": [],
 	"author": "",

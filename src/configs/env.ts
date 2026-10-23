@@ -14,7 +14,7 @@ const boolString = z.enum(["true", "false"]).transform((v) => v === "true")
 
 const envSchema = z.object({
 	NODE_ENV: z
-		.enum(["development", "test", "production"])
+		.enum(["development", "test", "staging", "production"])
 		.default("development"),
 	PORT: z.coerce.number().int().positive().default(3000),
 	DATABASE_URL: z.string().default("file:./dev.db"),

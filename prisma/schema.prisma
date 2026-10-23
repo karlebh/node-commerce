@@ -14,7 +14,7 @@ model User {
   passwordHash String?
   products     Product[]
   session      Session[]
-    oauthAccounts OAuthAccount[]
+  oauthAccounts OAuthAccount[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
@@ -23,6 +23,7 @@ model User {
   cart         Cart?
   orders       Order[]
    review      Review[]
+  idempotencyKeys IdempotencyKey[]
 
   @@map("users")
 }
@@ -77,6 +78,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@map("sessions")
 }
 
 model PasswordResetToken {
@@ -123,6 +125,8 @@ model Cart {
 
   user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]
+
+  @@map("carts")
 }
 
 model CartItem {
@@ -139,6 +143,7 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@index([productId])
+  @@map("cart_items")
 }
 
 enum LikeableType {
@@ -218,7 +223,7 @@ model Review {
   isApproved         Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-  deletedAt          DateTime @updatedAt
+  deletedAt          DateTime?
 
   user    User    @relation(fields: [userId], references: [id])
   product Product @relation(fields: [productId], references: [id])
@@ -226,6 +231,7 @@ model Review {
   @@unique([userId, productId])
   @@index([productId, isApproved, createdAt])
   @@index([productId, isApproved, rating])
+  @@map("reviews")
 }
 
 enum OauthProviders {
@@ -240,9 +246,47 @@ model OAuthAccount {
   id   String @id @default(cuid(2))
   provider OauthProviders
   providerAccountId  String
-  userId String 
+  userId String
   user User @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@map("oauth_accounts")
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum IdempotentableType {
+  ORDER
+  PAYMENT
+}
+
+model IdempotencyKey {
+  id                 String              @id @default(cuid(2))
+  key                String
+  userId             String
+  requestHash        String
+  responseStatus     Int?
+  responseBody       Json?
+  idempotentableId   String?
+  idempotentableType IdempotentableType?
+  status             IdempotencyStatus
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  expiresAt          DateTime
+  deletedAt          DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([idempotentableType, idempotentableId])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }
