@@ -24,7 +24,7 @@ vi.mock("passport", () => ({
 }))
 
 const { callback } = await import(
-	"../../../../../src/controllers/auth/oauth/google.controller.js"
+	"../../../../../src/controllers/oauth/google.controller.js"
 )
 
 describe("google oauth controller — callback", () => {

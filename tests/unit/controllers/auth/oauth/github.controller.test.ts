@@ -24,7 +24,7 @@ vi.mock("passport", () => ({
 }))
 
 const { callback } = await import(
-	"../../../../../src/controllers/auth/oauth/github.controller.js"
+	"../../../../../src/controllers/oauth/github.controller.js"
 )
 
 describe("github oauth controller — callback", () => {
