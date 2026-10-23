@@ -26,6 +26,9 @@ export const change: AuthenticatedHandler = async (request: AuthenticatedRequest
 	})
 
 	if (!user) throw new AppError(404, "Error fetching user")
+	if (!user.passwordHash) {
+		throw new AppError(400, "This account has no password set")
+	}
 
 	const isCurrentPasswordValid = await bcrypt.compare(
 		current_password,

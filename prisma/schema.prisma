@@ -11,9 +11,10 @@ model User {
   id           String    @id @default(cuid())
   username     String
   email        String    @unique
-  passwordHash String
+  passwordHash String?
   products     Product[]
   session      Session[]
+    oauthAccounts OAuthAccount[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
@@ -225,4 +226,23 @@ model Review {
   @@unique([userId, productId])
   @@index([productId, isApproved, createdAt])
   @@index([productId, isApproved, rating])
+}
+
+enum OauthProviders {
+  GOOGLE
+  GITHUB
+  FACEBOOK
+  APPLE
+  MICROSOFT
+}
+
+model OAuthAccount {
+  id   String @id @default(cuid(2))
+  provider OauthProviders
+  providerAccountId  String
+  userId String 
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }

@@ -19,7 +19,8 @@ export const requiresOwnership =
 			})) as Record<string, unknown> | null
 
 			if (!record || record[ownerField] !== request.userId) {
-				return response.status(404).json({ message: "Not found" })
+				response.status(404).json({ message: "Not found" })
+				return
 			}
 
 			Object.assign(request, { record })

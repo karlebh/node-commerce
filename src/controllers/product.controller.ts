@@ -53,7 +53,10 @@ export const show: RequestHandler = async (
 ): Promise<Response> => {
 	const { id } = productParamSchema.parse(request.params)
 
-	const product = await prisma.product.findUnique({ where: { id } })
+	const product = await prisma.product.findUnique({
+		where: { id },
+		include: { review: true },
+	})
 
 	if (!product || !product.isActive)
 		throw new AppError(404, "Product not found")

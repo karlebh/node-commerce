@@ -5,7 +5,7 @@ const adapter = new PrismaPg({
 	connectionString: process.env.DATABASE_URL!,
 })
 
-const createPrisma = (): PrismaClient =>
+const createPrisma = () =>
 	new PrismaClient({
 		adapter,
 		omit: { user: { passwordHash: true } },

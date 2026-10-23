@@ -1,80 +1,116 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { Request, Response } from "express"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import type { NextFunction, Request, Response } from "express"
+import jwt from "jsonwebtoken"
+
+vi.mock("../../../src/database/prisma.js", async () => {
+	const { createPrismaMock } = await import("../../helpers/prisma-mock.js")
+	return { prisma: createPrismaMock() }
+})
+
+import { prisma } from "../../../src/database/prisma.js"
+import type { PrismaMock } from "../../helpers/prisma-mock.js"
+import { protectedHandler } from "../../../src/middleware/protectedHandler.js"
+import { env } from "../../../src/configs/env.js"
 import { AppError } from "../../../src/errors/AppError.js"
 
-const { requiresAuthMock } = vi.hoisted(() => ({
-	requiresAuthMock: vi.fn(),
-}))
+const prismaMock = prisma as unknown as PrismaMock
 
-vi.mock("../../../src/middleware/requiresAuth.js", () => ({
-	requiresAuth: requiresAuthMock,
-}))
+const buildValidAuth = (): Record<string, string> => {
+	const token = jwt.sign({}, env.JWT_SECRET, {
+		subject: "u1",
+		jwtid: "s1",
+		expiresIn: env.JWT_EXPIRES_IN,
+	})
+	return { authorization: `Bearer ${token}` }
+}
 
-const { protectedHandler } =
-	await import("../../../src/middleware/protectedHandler.js")
+const mockActiveSession = (): void => {
+	prismaMock.session.findUnique.mockResolvedValueOnce({
+		id: "s1",
+		userId: "u1",
+		revokedAt: null,
+		expiresAt: new Date(Date.now() + 60_000),
+	})
+}
 
 describe("protectedHandler", () => {
 	beforeEach(() => {
-		vi.clearAllMocks()
+		prismaMock.session.findUnique.mockReset()
 	})
 
-	it("authenticates once and calls the handler with assigned identity", async () => {
-		requiresAuthMock.mockImplementation((request, _response, next) => {
-			request.userId = "user-123"
-			request.sessionId = "session-123"
-			next()
-		})
-
+	it("blocks unauthenticated callers with 401 via next", async () => {
 		const handler = vi.fn()
-		const route = protectedHandler(handler)
-		const request = { body: {} } as Request
-		const response = {} as Response
 		const next = vi.fn()
+		await protectedHandler(handler)(
+			{ headers: {} } as unknown as Request,
+			{} as Response,
+			next as unknown as NextFunction
+		)
+		expect(handler).not.toHaveBeenCalled()
+		const err = next.mock.calls[0]?.[0] as AppError
+		expect(err.statusCode).toBe(401)
+	})
 
-		route(request, response, next)
-		await vi.waitFor(() => expect(handler).toHaveBeenCalledOnce())
+	it("runs the handler when auth succeeds", async () => {
+		mockActiveSession()
+		const handler = vi.fn(
+			(_req: unknown, res: Response) =>
+				void res.status(200).json({ ok: true })
+		)
+		const next = vi.fn()
+		const res = {
+			status: vi.fn().mockReturnThis(),
+			json: vi.fn(),
+		} as unknown as Response
 
-		expect(requiresAuthMock).toHaveBeenCalledOnce()
-		expect(handler.mock.calls[0][0]).toMatchObject({
-			userId: "user-123",
-			sessionId: "session-123",
-		})
+		await protectedHandler(handler)(
+			{ headers: buildValidAuth() } as unknown as Request,
+			res,
+			next as unknown as NextFunction
+		)
+
+		expect(handler).toHaveBeenCalledOnce()
 		expect(next).not.toHaveBeenCalled()
 	})
 
-	it("does not call the handler when auth fails", () => {
-		const authError = new AppError(401, "Authentication required")
-		requiresAuthMock.mockImplementation((_request, _response, next) => {
-			next(authError)
+	it("runs extra middlewares in order before the handler", async () => {
+		mockActiveSession()
+		const order: string[] = []
+		const mw1: Parameters<typeof protectedHandler>[1] = (_r, _s, n) => {
+			order.push("mw1")
+			n()
+		}
+		const mw2: Parameters<typeof protectedHandler>[1] = (_r, _s, n) => {
+			order.push("mw2")
+			n()
+		}
+		const handler = vi.fn(() => {
+			order.push("handler")
 		})
-
-		const handler = vi.fn()
-		const route = protectedHandler(handler)
 		const next = vi.fn()
+		const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response
 
-		route({ body: {} } as Request, {} as Response, next)
-
-		expect(handler).not.toHaveBeenCalled()
-		expect(next).toHaveBeenCalledWith(authError)
+		await protectedHandler(handler, mw1, mw2)(
+			{ headers: buildValidAuth() } as unknown as Request,
+			res,
+			next as unknown as NextFunction
+		)
+		expect(order).toEqual(["mw1", "mw2", "handler"])
 	})
 
-	it("fails closed if auth calls next without assigning identity", () => {
-		requiresAuthMock.mockImplementation((_request, _response, next) => {
-			next()
-		})
-
+	it("stops the chain when a middleware errors", async () => {
+		mockActiveSession()
+		const boom = new Error("fail")
+		const mw: Parameters<typeof protectedHandler>[1] = (_r, _s, n) =>
+			n(boom)
 		const handler = vi.fn()
-		const route = protectedHandler(handler)
 		const next = vi.fn()
-
-		route({ body: {} } as Request, {} as Response, next)
-
-		expect(handler).not.toHaveBeenCalled()
-		expect(next).toHaveBeenCalledWith(
-			expect.objectContaining({
-				statusCode: 401,
-				message: "Authentication required",
-			})
+		await protectedHandler(handler, mw)(
+			{ headers: buildValidAuth() } as unknown as Request,
+			{} as Response,
+			next as unknown as NextFunction
 		)
+		expect(handler).not.toHaveBeenCalled()
+		expect(next).toHaveBeenCalledWith(boom)
 	})
 })

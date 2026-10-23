@@ -2,6 +2,7 @@ import { Router } from "express"
 import * as productController from "../controllers/product.controller.js"
 import * as categoryController from "../controllers/category.controller.js"
 import * as authController from "../controllers/auth/auth.controller.js"
+import * as oauthController from "../controllers/auth/oauth.controller.js"
 import * as passwordController from "../controllers/auth/password.controller.js"
 import * as imageController from "../controllers/image.controller.js"
 import * as cartController from "../controllers/cart.controller.js"
@@ -54,6 +55,12 @@ authRouter.post("/logout", protectedHandler(authController.logout))
 authRouter.patch(
 	"/change-password",
 	protectedHandler(passwordController.change)
+)
+authRouter.get("/google", requiresGuest, oauthController.googleStart)
+authRouter.get(
+	"/google/callback",
+	oauthController.googleAuthenticate,
+	asyncHandler(oauthController.googleCallback)
 )
 
 export const categoryRouter = Router()

@@ -135,6 +135,7 @@ describe("Product Controller", () => {
 
 		expect(mockPrisma.product.findUnique).toHaveBeenCalledWith({
 			where: { id: product.id },
+			include: { review: true },
 		})
 		expect(response.json).toHaveBeenCalledWith({ data: product })
 	})
