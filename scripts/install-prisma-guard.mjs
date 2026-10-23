@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { writeFileSync, chmodSync, existsSync, mkdirSync } from "node:fs"
+import { writeFileSync, chmodSync, existsSync, mkdirSync, rmSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -22,11 +22,19 @@ const ps1 = `#!/usr/bin/env pwsh
 exit $LASTEXITCODE
 `
 
-writeFileSync(resolve(binDir, "prisma"), sh)
-try {
-	chmodSync(resolve(binDir, "prisma"), 0o755)
-} catch {}
-writeFileSync(resolve(binDir, "prisma.cmd"), cmd)
-writeFileSync(resolve(binDir, "prisma.ps1"), ps1)
+const writeShim = (name, body, mode) => {
+	const p = resolve(binDir, name)
+	rmSync(p, { force: true })
+	writeFileSync(p, body)
+	if (mode !== undefined) {
+		try {
+			chmodSync(p, mode)
+		} catch {}
+	}
+}
+
+writeShim("prisma", sh, 0o755)
+writeShim("prisma.cmd", cmd)
+writeShim("prisma.ps1", ps1)
 
 console.log("✓ Prisma guard installed in node_modules/.bin")
