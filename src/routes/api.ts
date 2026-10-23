@@ -2,7 +2,8 @@ import { Router } from "express"
 import * as productController from "../controllers/product.controller.js"
 import * as categoryController from "../controllers/category.controller.js"
 import * as authController from "../controllers/auth/auth.controller.js"
-import * as oauthController from "../controllers/auth/oauth.controller.js"
+import * as googleOauth from "../controllers/oauth/google.controller.js"
+import * as githubOauth from "../controllers/oauth/github.controller.js"
 import * as passwordController from "../controllers/auth/password.controller.js"
 import * as imageController from "../controllers/image.controller.js"
 import * as cartController from "../controllers/cart.controller.js"
@@ -56,11 +57,17 @@ authRouter.patch(
 	"/change-password",
 	protectedHandler(passwordController.change)
 )
-authRouter.get("/google", requiresGuest, oauthController.googleStart)
+authRouter.get("/google", requiresGuest, googleOauth.start)
 authRouter.get(
 	"/google/callback",
-	oauthController.googleAuthenticate,
-	asyncHandler(oauthController.googleCallback)
+	googleOauth.authenticate,
+	asyncHandler(googleOauth.callback)
+)
+authRouter.get("/github", requiresGuest, githubOauth.start)
+authRouter.get(
+	"/github/callback",
+	githubOauth.authenticate,
+	asyncHandler(githubOauth.callback)
 )
 
 export const categoryRouter = Router()

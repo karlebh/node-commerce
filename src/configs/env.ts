@@ -10,6 +10,8 @@ const msString = z
 	)
 	.transform((v) => v as StringValue)
 
+const boolString = z.enum(["true", "false"]).transform((v) => v === "true")
+
 const envSchema = z.object({
 	NODE_ENV: z
 		.enum(["development", "test", "production"])
@@ -26,6 +28,7 @@ const envSchema = z.object({
 	APP_URL: z.string().url().optional(),
 	APP_NAME: z.string(),
 	MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(50),
+	OAUTH_SESSION: boolString.default(false),
 })
 
 export const env = envSchema.parse(process.env)

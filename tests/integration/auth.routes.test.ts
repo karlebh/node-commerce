@@ -245,3 +245,28 @@ describe("GET /api/auth/google (OAuth start)", () => {
 		expect(decoded.provider).toBe("GOOGLE")
 	})
 })
+
+describe("GET /api/auth/github (OAuth start)", () => {
+	beforeEach(() => {
+		vi.resetAllMocks()
+	})
+
+	it("redirects to GitHub's OAuth consent screen with a signed state", async () => {
+		const res = await request(app).get("/api/auth/github")
+		expect(res.status).toBe(302)
+		const location = res.headers.location ?? ""
+		expect(location).toContain("github.com/login/oauth/authorize")
+
+		const stateParam = new URL(location).searchParams.get("state") ?? ""
+		expect(stateParam.split(".").length).toBe(3)
+
+		const jwt = (await import("jsonwebtoken")).default
+		const { env } = await import("../../src/configs/env.js")
+		const decoded = jwt.verify(stateParam, env.JWT_SECRET) as {
+			purpose: string
+			provider: string
+		}
+		expect(decoded.purpose).toBe("oauth-state")
+		expect(decoded.provider).toBe("GITHUB")
+	})
+})
