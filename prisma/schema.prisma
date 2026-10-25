@@ -24,6 +24,7 @@ model User {
   orders       Order[]
    review      Review[]
   idempotencyKeys IdempotencyKey[]
+  payments     Payment[]
 
   @@map("users")
 }
@@ -185,8 +186,9 @@ model Order {
   updatedAt DateTime    @updatedAt
   deletedAt DateTime?
 
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
 
   @@index([userId])
   @@index([status])
@@ -263,30 +265,69 @@ enum IdempotencyStatus {
   FAILED
 }
 
-enum IdempotentableType {
-  ORDER
-  PAYMENT
-}
-
 model IdempotencyKey {
-  id                 String              @id @default(cuid(2))
-  key                String
-  userId             String
-  requestHash        String
-  responseStatus     Int?
-  responseBody       Json?
-  idempotentableId   String?
-  idempotentableType IdempotentableType?
-  status             IdempotencyStatus
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  expiresAt          DateTime
-  deletedAt          DateTime?
+  id             String           @id @default(cuid(2))
+  key            String
+  userId         String
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  status         IdempotencyStatus
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  expiresAt      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, key])
-  @@index([idempotentableType, idempotentableId])
   @@index([expiresAt])
   @@map("idempotency_keys")
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  FLUTTERWAVE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  ABANDONED
+}
+
+model Payment {
+  id                String          @id @default(cuid(2))
+  userId            String
+  orderId           String?
+  provider          PaymentProvider
+  reference         String          @unique
+  providerReference String?
+  amount            Int
+  currency          String          @default("NGN")
+  status            PaymentStatus   @default(PENDING)
+  rawInit           Json?
+  rawVerify         Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+  @@map("payments")
+}
+
+model PaymentWebhookEvent {
+  id          String          @id @default(cuid(2))
+  provider    PaymentProvider
+  eventId     String
+  payload     Json
+  processedAt DateTime        @default(now())
+
+  @@unique([provider, eventId])
+  @@map("payment_webhook_events")
 }

@@ -1,4 +1,6 @@
-import type { Prisma } from "@prisma/client"
+import { IdempotencyStatus, Prisma } from "@prisma/client"
+import { createHash } from "node:crypto"
+import { env } from "../configs/env.js"
 import { AppError } from "../errors/AppError.js"
 import { prisma } from "../database/prisma.js"
 
@@ -9,8 +11,12 @@ type InvalidOrderItem = {
 	availableStock?: number
 }
 
-export const placeOrder = async (userId: string): Promise<Prisma.OrderGetPayload<{ include: { items: true } }>> =>
-	prisma.$transaction(async (tx) => {
+type PlacedOrder = Prisma.OrderGetPayload<{ include: { items: true } }>
+
+const placeOrderInTransaction = async (
+	tx: Prisma.TransactionClient,
+	userId: string
+): Promise<PlacedOrder> => {
 		const cart = await tx.cart.findUnique({
 			where: { userId },
 			include: {
@@ -155,4 +161,137 @@ export const placeOrder = async (userId: string): Promise<Prisma.OrderGetPayload
 		})
 
 		return order
+}
+
+export const placeOrder = async (userId: string): Promise<PlacedOrder> =>
+	prisma.$transaction((tx) => placeOrderInTransaction(tx, userId))
+
+const ORDER_REQUEST_HASH = createHash("sha256")
+	.update("place-order")
+	.digest("hex")
+
+const serializeOrder = (order: PlacedOrder): Prisma.InputJsonValue =>
+	JSON.parse(JSON.stringify(order))
+
+const reserveOrderIdempotencyKey = async (
+	userId: string,
+	key: string
+): Promise<
+	| { kind: "reserved"; id: string }
+	| { kind: "replay"; order: Prisma.JsonObject }
+> => {
+	const now = new Date()
+	const expiresAt = new Date(now.getTime() + env.IDEMPOTENCY_TTL_MS)
+
+	try {
+		const record = await prisma.idempotencyKey.create({
+			data: {
+				userId,
+				key,
+				requestHash: ORDER_REQUEST_HASH,
+				status: IdempotencyStatus.IN_PROGRESS,
+				expiresAt,
+			},
+		})
+
+		return { kind: "reserved", id: record.id }
+	} catch (error) {
+		if (
+			!(
+				error instanceof Prisma.PrismaClientKnownRequestError &&
+				error.code === "P2002"
+			)
+		) {
+			throw error
+		}
+	}
+
+	const existing = await prisma.idempotencyKey.findUnique({
+		where: { userId_key: { userId, key } },
 	})
+	if (!existing) {
+		throw new AppError(409, "Unable to reserve idempotency key")
+	}
+
+	if (existing.expiresAt <= now) {
+		const reclaimed = await prisma.idempotencyKey.updateMany({
+			where: { id: existing.id, expiresAt: { lte: now } },
+			data: {
+				requestHash: ORDER_REQUEST_HASH,
+				status: IdempotencyStatus.IN_PROGRESS,
+				responseStatus: null,
+				responseBody: Prisma.DbNull,
+				expiresAt,
+			},
+		})
+		if (reclaimed.count === 1) {
+			return { kind: "reserved", id: existing.id }
+		}
+
+		return reserveOrderIdempotencyKey(userId, key)
+	}
+
+	if (existing.requestHash !== ORDER_REQUEST_HASH) {
+		throw new AppError(
+			409,
+			"Idempotency key was already used with different request details"
+		)
+	}
+
+	const responseBody = existing.responseBody
+	if (
+		existing.status === IdempotencyStatus.COMPLETED &&
+		responseBody !== null &&
+		typeof responseBody === "object" &&
+		!Array.isArray(responseBody) &&
+		typeof responseBody.id === "string" &&
+		existing.responseStatus === 201
+	) {
+		return { kind: "replay", order: responseBody }
+	}
+
+	if (existing.status === IdempotencyStatus.COMPLETED) {
+		throw new AppError(500, "Stored idempotency response is invalid")
+	}
+
+	if (existing.status === IdempotencyStatus.FAILED) {
+		throw new AppError(
+			409,
+			"Previous order placement failed; use a new idempotency key"
+		)
+	}
+
+	throw new AppError(
+		409,
+		"Order placement with this idempotency key is still in progress"
+	)
+}
+
+export const placeOrderIdempotently = async (
+	userId: string,
+	key: string
+): Promise<PlacedOrder | Prisma.JsonObject> => {
+	const reservation = await reserveOrderIdempotencyKey(userId, key)
+	if (reservation.kind === "replay") return reservation.order
+
+	try {
+		return await prisma.$transaction(async (tx) => {
+			const order = await placeOrderInTransaction(tx, userId)
+			await tx.idempotencyKey.update({
+				where: { id: reservation.id },
+				data: {
+					status: IdempotencyStatus.COMPLETED,
+					responseStatus: 201,
+					responseBody: serializeOrder(order),
+				},
+			})
+			return order
+		})
+	} catch (error) {
+		await prisma.idempotencyKey.update({
+			where: { id: reservation.id },
+			data: { status: IdempotencyStatus.FAILED },
+		})
+		throw error
+	}
+}

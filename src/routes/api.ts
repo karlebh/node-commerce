@@ -1,4 +1,4 @@
-import { Router } from "express"
+import express, { Router } from "express"
 import * as productController from "../controllers/product.controller.js"
 import * as categoryController from "../controllers/category.controller.js"
 import * as authController from "../controllers/auth/auth.controller.js"
@@ -9,6 +9,7 @@ import * as imageController from "../controllers/image.controller.js"
 import * as cartController from "../controllers/cart.controller.js"
 import * as orderController from "../controllers/order.controller.js"
 import * as notificationController from "../controllers/notification.controller.js"
+import * as paymentController from "../controllers/payment.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
@@ -134,4 +135,18 @@ orderRouter.put(
 orderRouter.delete(
 	"/",
 	protectedHandler(orderController.destroy, requiresOwnership(prisma.order))
+)
+
+export const paymentRouter = Router()
+paymentRouter.post("/", protectedHandler(paymentController.initializePayment))
+paymentRouter.get(
+	"/verify/:reference",
+	protectedHandler(paymentController.verifyPayment)
+)
+
+export const paymentWebhookRouter = Router()
+paymentWebhookRouter.post(
+	"/:provider",
+	express.raw({ type: "*/*", limit: "1mb" }),
+	paymentController.webhook
 )

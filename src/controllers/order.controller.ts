@@ -4,7 +4,7 @@ import type {
 	AuthenticatedHandler,
 	AuthenticatedRequest,
 } from "../middleware/protectedHandler.js"
-import { placeOrder } from "../services/order.service.js"
+import { placeOrderIdempotently } from "../services/order.service.js"
 import { AppError } from "../errors/AppError.js"
 import { paginate } from "../lib/paginate.js"
 import {
@@ -12,6 +12,9 @@ import {
 	orderSchema,
 	updateOrderschema,
 } from "../validations/order.schema.js"
+import { z } from "zod"
+
+const idempotencyKeySchema = z.string().trim().min(1).max(255)
 
 export const index: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
@@ -74,7 +77,14 @@ export const store: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
 	response: Response
 ): Promise<Response> => {
-	const order = await placeOrder(request.userId)
+	const key = idempotencyKeySchema.safeParse(
+		request.get("Idempotency-Key")
+	)
+	if (!key.success) {
+		throw new AppError(400, "A valid Idempotency-Key header is required")
+	}
+
+	const order = await placeOrderIdempotently(request.userId, key.data)
 
 	return response.status(201).json({ data: order })
 }

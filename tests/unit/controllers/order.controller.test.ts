@@ -15,12 +15,12 @@ const mockPrisma = {
 	},
 }
 
-const mockPlaceOrder = vi.fn()
+const mockPlaceOrderIdempotently = vi.fn()
 
 vi.mock("../../../src/database/prisma.js", () => ({ prisma: mockPrisma }))
 
 vi.mock("../../../src/services/order.service.js", () => ({
-	placeOrder: mockPlaceOrder,
+	placeOrderIdempotently: mockPlaceOrderIdempotently,
 }))
 
 vi.mock("../../../src/lib/paginate.js", () => ({
@@ -146,20 +146,43 @@ describe("Order Controller", () => {
 	})
 
 	describe("store", () => {
-		it("places an order via the service", async () => {
+		it("places an order idempotently via the service", async () => {
 			const order = { id: VALID_CUID2, items: [] }
-			mockPlaceOrder.mockResolvedValue(order)
+			mockPlaceOrderIdempotently.mockResolvedValue(order)
 
 			const response = createControllerTestResponse()
 			await invokeController(
 				store,
-				{ body: {}, userId: "user-1" },
+				{
+					body: {},
+					userId: "user-1",
+					get: vi.fn().mockReturnValue("request-1"),
+				},
 				response
 			)
 
-			expect(mockPlaceOrder).toHaveBeenCalledWith("user-1")
+			expect(mockPlaceOrderIdempotently).toHaveBeenCalledWith(
+				"user-1",
+				"request-1"
+			)
 			expect(response.status).toHaveBeenCalledWith(201)
 			expect(response.json).toHaveBeenCalledWith({ data: order })
+		})
+
+		it("requires an Idempotency-Key header", async () => {
+			await expect(
+				invokeController(
+					store,
+					{
+						body: {},
+						userId: "user-1",
+						get: vi.fn().mockReturnValue(undefined),
+					},
+					createControllerTestResponse()
+				)
+			).rejects.toMatchObject({ statusCode: 400 })
+
+			expect(mockPlaceOrderIdempotently).not.toHaveBeenCalled()
 		})
 	})
 

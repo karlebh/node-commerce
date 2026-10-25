@@ -13,6 +13,9 @@ import {
 	cartRouter,
 	categoryRouter,
 	imageRouter,
+	orderRouter,
+	paymentRouter,
+	paymentWebhookRouter,
 	productRouter,
 } from "./routes/api.js"
 
@@ -21,8 +24,11 @@ export const app = express()
 app.disable("x-powered-by")
 app.use(helmet())
 app.use(cors({ origin: env.FRONTEND_URL }))
-app.use(express.json({ limit: "1mb" }))
 app.use(pinoHttp({ logger }))
+
+app.use("/api/payments/webhook", paymentWebhookRouter)
+
+app.use(express.json({ limit: "1mb" }))
 app.use("/api", apiRateLimiter)
 
 app.get("/health", (_request: Request, response: Response) =>
@@ -33,6 +39,7 @@ app.use("/api/categories", categoryRouter)
 app.use("/api/products", productRouter)
 app.use("/api/images", imageRouter)
 app.use("/api/carts", cartRouter)
-app.use("/api/orders", cartRouter)
+app.use("/api/orders", orderRouter)
+app.use("/api/payments", paymentRouter)
 app.use(notFound)
 app.use(errorHandler)
