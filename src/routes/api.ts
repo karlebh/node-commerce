@@ -10,6 +10,7 @@ import * as cartController from "../controllers/cart.controller.js"
 import * as orderController from "../controllers/order.controller.js"
 import * as notificationController from "../controllers/notification.controller.js"
 import * as paymentController from "../controllers/payment.controller.js"
+import * as TaskController from "../controllers/task.controllers.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
@@ -150,3 +151,6 @@ paymentWebhookRouter.post(
 	express.raw({ type: "*/*", limit: "1mb" }),
 	paymentController.webhook
 )
+
+export const taskRouter = Router()
+taskRouter.get("/", protectedHandler(TaskController.index))

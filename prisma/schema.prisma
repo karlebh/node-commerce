@@ -25,6 +25,7 @@ model User {
    review      Review[]
   idempotencyKeys IdempotencyKey[]
   payments     Payment[]
+  tasks Task[]
 
   @@map("users")
 }
@@ -330,4 +331,16 @@ model PaymentWebhookEvent {
 
   @@unique([provider, eventId])
   @@map("payment_webhook_events")
+}
+
+model Task {
+  id String @id @default(cuid(2))
+  userId String
+  title String 
+  body String @db.Text 
+  createdAt DateTime @default(now())
+
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([title])
+  @@map("tasks")
 }

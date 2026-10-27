@@ -17,6 +17,7 @@ import {
 	paymentRouter,
 	paymentWebhookRouter,
 	productRouter,
+	taskRouter,
 } from "./routes/api.js"
 
 export const app = express()
@@ -41,5 +42,6 @@ app.use("/api/images", imageRouter)
 app.use("/api/carts", cartRouter)
 app.use("/api/orders", orderRouter)
 app.use("/api/payments", paymentRouter)
+app.use("/api/tasks", taskRouter)
 app.use(notFound)
 app.use(errorHandler)
