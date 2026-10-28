@@ -1,4 +1,13 @@
-import { describe, it, expect } from "vitest"
+import { beforeEach, describe, it, expect, vi } from "vitest"
+
+const { mockFindFirst } = vi.hoisted(() => ({
+	mockFindFirst: vi.fn(),
+}))
+
+vi.mock("../../../src/database/prisma.js", () => ({
+	prisma: { user: { findFirst: mockFindFirst } },
+}))
+
 import {
 	registerUserSchema,
 	loginUserSchema,
@@ -9,66 +18,108 @@ import {
 } from "../../../src/validations/auth.schemas.js"
 
 describe("registerUserSchema", () => {
-	it("accepts valid payload without confirmation", () => {
-		const parsed = registerUserSchema.parse({
+	beforeEach(() => {
+		mockFindFirst.mockReset().mockResolvedValue(null)
+	})
+
+	it("accepts valid payload without confirmation", async () => {
+		const parsed = await registerUserSchema.parseAsync({
 			username: "jane",
 			email: "JANE@example.com",
 			password: "longenoughpassword",
 		})
 		expect(parsed.email).toBe("jane@example.com")
+		expect(mockFindFirst).toHaveBeenCalledWith({
+			where: { OR: [{ email: "jane@example.com" }, { username: "jane" }] },
+			select: { email: true, username: true },
+		})
 	})
 
-	it("accepts matching snake_case confirmation", () => {
-		expect(() =>
-			registerUserSchema.parse({
+	it("accepts matching snake_case confirmation", async () => {
+		await expect(
+			registerUserSchema.parseAsync({
 				username: "jane",
 				email: "jane@example.com",
 				password: "longenough",
 				password_confirmation: "longenough",
 			})
-		).not.toThrow()
+		).resolves.toMatchObject({ username: "jane" })
 	})
 
-	it("accepts matching camelCase confirmation", () => {
-		expect(() =>
-			registerUserSchema.parse({
+	it("accepts matching camelCase confirmation", async () => {
+		await expect(
+			registerUserSchema.parseAsync({
 				username: "jane",
 				email: "jane@example.com",
 				password: "longenough",
 				passwordConfirmation: "longenough",
 			})
-		).not.toThrow()
+		).resolves.toMatchObject({ username: "jane" })
 	})
 
-	it("rejects mismatched confirmation", () => {
-		expect(() =>
-			registerUserSchema.parse({
+	it("rejects mismatched confirmation", async () => {
+		await expect(
+			registerUserSchema.parseAsync({
 				username: "jane",
 				email: "jane@example.com",
 				password: "longenough",
 				password_confirmation: "different",
 			})
-		).toThrow()
+		).rejects.toThrow()
 	})
 
-	it("rejects short username", () => {
-		expect(() =>
-			registerUserSchema.parse({
+	it("rejects short username", async () => {
+		await expect(
+			registerUserSchema.parseAsync({
 				username: "a",
 				email: "jane@example.com",
 				password: "longenough",
 			})
-		).toThrow()
+		).rejects.toThrow()
 	})
 
-	it("rejects short password", () => {
-		expect(() =>
-			registerUserSchema.parse({
+	it("rejects short password", async () => {
+		await expect(
+			registerUserSchema.parseAsync({
 				username: "jane",
 				email: "jane@example.com",
 				password: "short",
 			})
-		).toThrow()
+		).rejects.toThrow()
+	})
+
+	it("rejects an email already in use", async () => {
+		mockFindFirst.mockResolvedValue({
+			email: "jane@example.com",
+			username: "someone-else",
+		})
+
+		await expect(
+			registerUserSchema.parseAsync({
+				username: "jane",
+				email: "jane@example.com",
+				password: "longenough",
+			})
+		).rejects.toMatchObject({
+			issues: [expect.objectContaining({ path: ["email"] })],
+		})
+	})
+
+	it("rejects a username already in use", async () => {
+		mockFindFirst.mockResolvedValue({
+			email: "someone@example.com",
+			username: "jane",
+		})
+
+		await expect(
+			registerUserSchema.parseAsync({
+				username: "jane",
+				email: "jane@example.com",
+				password: "longenough",
+			})
+		).rejects.toMatchObject({
+			issues: [expect.objectContaining({ path: ["username"] })],
+		})
 	})
 })
 

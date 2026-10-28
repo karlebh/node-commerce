@@ -1,4 +1,6 @@
-export type PaymentProviderName = "paystack" | "flutterwave"
+import type { Payment, Prisma } from "@prisma/client"
+
+export type PaymentProviderName = "paystack" | "flutterwave" | "stripe"
 
 export type NormalizedPaymentStatus =
 	| "success"
@@ -40,6 +42,31 @@ export type WebhookEvent = {
 }
 
 export type WebhookHeaders = Record<string, string | string[] | undefined>
+
+export type InitializePaymentArgs = {
+	userId: string
+	email: string
+	amount: number
+	currency?: string | undefined
+	provider: PaymentProviderName
+	orderId?: string | undefined
+	metadata?: Record<string, unknown> | undefined
+}
+
+export type InitializePaymentResponse = {
+	authorizationUrl: string
+	reference: string
+	payment: Payment
+}
+
+export type PaymentOutcomeArgs = {
+	payment: Payment
+	status: Payment["status"]
+	providerReference: string
+	amount: number
+	currency: string
+	rawVerify: Prisma.InputJsonValue
+}
 
 export interface PaymentGateway {
 	readonly name: PaymentProviderName

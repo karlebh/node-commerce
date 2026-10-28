@@ -1,38 +1,32 @@
 import pino from "pino"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { env } from "../configs/env.js"
 
+const transportPath = fileURLToPath(
+	new URL("./log-transport.js", import.meta.url)
+)
 const logDir = path.join(process.cwd(), "logs")
-
-const prettyOptions = {
-	translateTime: "dd/mm/yyyy HH:MM:ss",
-	messageFormat: "{msg}",
-	ignore: "pid,hostname",
-}
 
 export const logger = pino(
 	{
 		level: "info",
 		base: null,
-		timestamp: pino.stdTimeFunctions.isoTime,
+		timestamp: pino.stdTimeFunctions.epochTime,
 	},
 	pino.transport({
 		targets: [
 			{
-				target: "pino-pretty",
+				target: transportPath,
 				level: "info",
-				options: {
-					...prettyOptions,
-					colorize: true,
-				},
+				options: { appEnv: env.NODE_ENV },
 			},
 			{
-				target: "pino-pretty",
+				target: transportPath,
 				level: "info",
 				options: {
-					...prettyOptions,
-					colorize: false,
+					appEnv: env.NODE_ENV,
 					destination: path.join(logDir, "app.log"),
-					mkdir: true,
 				},
 			},
 		],

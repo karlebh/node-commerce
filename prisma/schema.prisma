@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id           String    @id @default(cuid())
-  username     String
+  username     String    @unique
   email        String    @unique
   passwordHash String?
   products     Product[]
@@ -288,6 +288,7 @@ model IdempotencyKey {
 enum PaymentProvider {
   PAYSTACK
   FLUTTERWAVE
+  STRIPE
 }
 
 enum PaymentStatus {

@@ -11,6 +11,10 @@ const msString = z
 	.transform((v) => v as StringValue)
 
 const boolString = z.enum(["true", "false"]).transform((v) => v === "true")
+const optionalSecret = z.preprocess(
+	(value) => (value === "" ? undefined : value),
+	z.string().min(1).optional()
+)
 
 const envSchema = z.object({
 	NODE_ENV: z
@@ -30,9 +34,11 @@ const envSchema = z.object({
 	APP_NAME: z.string(),
 	MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(50),
 	OAUTH_SESSION: boolString.default(false),
-	PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
-	FLUTTERWAVE_SECRET_KEY: z.string().min(1).optional(),
-	FLUTTERWAVE_WEBHOOK_HASH: z.string().min(1).optional(),
+	PAYSTACK_SECRET_KEY: optionalSecret,
+	FLUTTERWAVE_SECRET_KEY: optionalSecret,
+	FLUTTERWAVE_WEBHOOK_HASH: optionalSecret,
+	STRIPE_SECRET_KEY: optionalSecret,
+	STRIPE_WEBHOOK_SECRET: optionalSecret,
 	PAYMENT_CALLBACK_URL: z
 		.string()
 		.url()

@@ -3,9 +3,10 @@ import { AppError } from "../errors/AppError.js"
 import type {
 	PaymentGateway,
 	PaymentProviderName,
-} from "../interfaces/payment-gateway.interface.js"
+} from "../types/payment.js"
 import { createFlutterwaveGateway } from "./flutterwave.js"
 import { createPaystackGateway } from "./paystack.js"
+import { createStripeGateway } from "./stripe.js"
 
 const gateways: Partial<Record<PaymentProviderName, PaymentGateway>> = {}
 
@@ -17,6 +18,13 @@ if (env.FLUTTERWAVE_SECRET_KEY && env.FLUTTERWAVE_WEBHOOK_HASH) {
 	gateways.flutterwave = createFlutterwaveGateway(
 		env.FLUTTERWAVE_SECRET_KEY,
 		env.FLUTTERWAVE_WEBHOOK_HASH
+	)
+}
+
+if (env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET) {
+	gateways.stripe = createStripeGateway(
+		env.STRIPE_SECRET_KEY,
+		env.STRIPE_WEBHOOK_SECRET
 	)
 }
 
