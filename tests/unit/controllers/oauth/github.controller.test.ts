@@ -3,15 +3,15 @@ import {
 	createControllerTestResponse,
 	invokeController,
 	type ControllerTestRequest,
-} from "../../../../helpers/controller-test.js"
+} from "../../../helpers/controller-test.js"
 
 const mockCreateSessionAndToken = vi.fn()
 
-vi.mock("../../../../../src/helpers/index.js", () => ({
+vi.mock("../../../../src/helpers/index.js", () => ({
 	createSessionAndToken: mockCreateSessionAndToken,
 }))
 
-vi.mock("../../../../../src/configs/env.js", () => ({
+vi.mock("../../../../src/configs/env.js", () => ({
 	env: {
 		FRONTEND_URL: "http://localhost:5173",
 	},
@@ -24,7 +24,7 @@ vi.mock("passport", () => ({
 }))
 
 const { callback } = await import(
-	"../../../../../src/controllers/oauth/github.controller.js"
+	"../../../../src/controllers/oauth/github.controller.js"
 )
 
 describe("github oauth controller — callback", () => {

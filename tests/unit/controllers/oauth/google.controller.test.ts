@@ -3,15 +3,15 @@ import {
 	createControllerTestResponse,
 	invokeController,
 	type ControllerTestRequest,
-} from "../../../../helpers/controller-test.js"
+} from "../../../helpers/controller-test.js"
 
 const mockCreateSessionAndToken = vi.fn()
 
-vi.mock("../../../../../src/helpers/index.js", () => ({
+vi.mock("../../../../src/helpers/index.js", () => ({
 	createSessionAndToken: mockCreateSessionAndToken,
 }))
 
-vi.mock("../../../../../src/configs/env.js", () => ({
+vi.mock("../../../../src/configs/env.js", () => ({
 	env: {
 		FRONTEND_URL: "http://localhost:5173",
 	},
@@ -19,13 +19,14 @@ vi.mock("../../../../../src/configs/env.js", () => ({
 
 vi.mock("passport", () => ({
 	default: {
-		authenticate: vi.fn(() => (_req: unknown, _res: unknown, _next: unknown) => {}),
+		authenticate: vi.fn(
+			() => (_req: unknown, _res: unknown, _next: unknown) => {}
+		),
 	},
 }))
 
-const { callback } = await import(
-	"../../../../../src/controllers/oauth/google.controller.js"
-)
+const { callback } =
+	await import("../../../../src/controllers/oauth/google.controller.js")
 
 describe("google oauth controller — callback", () => {
 	beforeEach(() => {
@@ -50,7 +51,9 @@ describe("google oauth controller — callback", () => {
 		await invokeController(
 			callback,
 			request,
-			response as unknown as ReturnType<typeof createControllerTestResponse>
+			response as unknown as ReturnType<
+				typeof createControllerTestResponse
+			>
 		)
 
 		expect(mockCreateSessionAndToken).toHaveBeenCalledWith("user-1")
@@ -89,9 +92,10 @@ describe("google oauth controller — callback", () => {
 
 		await invokeController(
 			callback,
-			{ body: {}, user: { id: "u1" } } as unknown as ControllerTestRequest<
-				Record<string, never>
-			>,
+			{
+				body: {},
+				user: { id: "u1" },
+			} as unknown as ControllerTestRequest<Record<string, never>>,
 			response as unknown as ReturnType<
 				typeof createControllerTestResponse
 			>
