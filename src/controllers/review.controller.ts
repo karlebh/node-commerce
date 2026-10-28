@@ -8,7 +8,7 @@ import {
 	createReviewSchema,
 	destroyReviewSchema,
 	updateReviewSchema,
-} from "../validations/review.sceham.js"
+} from "../validations/review.schema.js"
 import { prisma } from "../database/prisma.js"
 
 export const store: AuthenticatedHandler = async (

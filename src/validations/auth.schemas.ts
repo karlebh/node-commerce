@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { prisma } from "../database/prisma.js"
 
 const passwordConfirmationSchema = z.string().min(1)
 
@@ -15,21 +16,46 @@ const baseRegisterFieldsSchema = z.object({
 	passwordConfirmation: passwordConfirmationSchema.optional(),
 })
 
-export const registerUserSchema = baseRegisterFieldsSchema.refine(
-	(data) => {
-		const confirmation = normalizePasswordConfirmation(
-			data.passwordConfirmation,
-			data.password_confirmation
-		)
+export const registerUserSchema = baseRegisterFieldsSchema
+	.refine(
+		(data) => {
+			const confirmation = normalizePasswordConfirmation(
+				data.passwordConfirmation,
+				data.password_confirmation
+			)
 
-		if (!confirmation) return true
-		return data.password === confirmation
-	},
-	{
-		message: "Passwords do not match",
-		path: ["password_confirmation"],
-	}
-)
+			if (!confirmation) return true
+			return data.password === confirmation
+		},
+		{
+			message: "Passwords do not match",
+			path: ["password_confirmation"],
+		}
+	)
+	.superRefine(async ({ email, username }, context) => {
+		const existing = await prisma.user.findFirst({
+			where: { OR: [{ email }, { username }] },
+			select: { email: true, username: true },
+		})
+
+		if (!existing) return
+
+		if (existing.email === email) {
+			context.addIssue({
+				code: "custom",
+				message: "User already exists",
+				path: ["email"],
+			})
+		}
+
+		if (existing.username === username) {
+			context.addIssue({
+				code: "custom",
+				message: "Username is taken",
+				path: ["username"],
+			})
+		}
+	})
 
 export const loginUserSchema = baseRegisterFieldsSchema.pick({
 	email: true,

@@ -21,6 +21,7 @@ type LoginBody = {
 const mockPrisma = {
 	user: {
 		findUnique: vi.fn(),
+		findFirst: vi.fn(),
 		create: vi.fn(),
 	},
 	session: {
@@ -87,7 +88,6 @@ describe("Auth Controller", () => {
 				email: "john@example.com",
 			}
 
-			mockPrisma.user.findUnique.mockResolvedValue(null)
 			mockBcrypt.hash.mockResolvedValue("hashed-password")
 			mockPrisma.user.create.mockResolvedValue(user)
 			mockCreateSessionAndToken.mockResolvedValue("jwt-token")
@@ -95,8 +95,14 @@ describe("Auth Controller", () => {
 
 			await invokeController(register, request, response)
 
-			expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-				where: { email: "john@example.com" },
+			expect(mockPrisma.user.findFirst).toHaveBeenCalledWith({
+				where: {
+					OR: [
+						{ email: "john@example.com" },
+						{ username: "john" },
+					],
+				},
+				select: { email: true, username: true },
 			})
 
 			expect(mockBcrypt.hash).toHaveBeenCalledWith("password123", 12)
@@ -111,10 +117,7 @@ describe("Auth Controller", () => {
 
 			expect(mockCreateSessionAndToken).toHaveBeenCalledWith("user-123")
 
-			expect(mockAddEmailJob).toHaveBeenCalledWith("register", {
-				email: "john@example.com",
-				name: "john",
-			})
+			expect(mockAddEmailJob).not.toHaveBeenCalled()
 
 			expect(response.status).toHaveBeenCalledWith(201)
 
@@ -137,9 +140,9 @@ describe("Auth Controller", () => {
 
 			const response = createControllerTestResponse()
 
-			mockPrisma.user.findUnique.mockResolvedValue({
-				id: "existing-user",
+			mockPrisma.user.findFirst.mockResolvedValue({
 				email: "john@example.com",
+				username: "someone-else",
 			})
 
 			await expect(

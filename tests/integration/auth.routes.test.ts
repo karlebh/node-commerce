@@ -4,6 +4,7 @@ import request from "supertest"
 const mockPrisma = {
 	user: {
 		findUnique: vi.fn(),
+		findFirst: vi.fn(),
 		create: vi.fn(),
 		update: vi.fn(),
 	},
@@ -43,7 +44,7 @@ describe("POST /api/auth/register", () => {
 	})
 
 	it("creates a new user and returns a token", async () => {
-		mockPrisma.user.findUnique.mockResolvedValueOnce(null)
+		mockPrisma.user.findFirst.mockResolvedValueOnce(null)
 		mockBcrypt.hash.mockResolvedValueOnce("hashed")
 		mockPrisma.user.create.mockResolvedValueOnce({
 			id: "u1",
@@ -65,8 +66,11 @@ describe("POST /api/auth/register", () => {
 		expect(mockPrisma.user.create).toHaveBeenCalled()
 	})
 
-	it("returns 409 when the email is already taken", async () => {
-		mockPrisma.user.findUnique.mockResolvedValueOnce({ id: "existing" })
+	it("returns 422 when the email is already taken", async () => {
+		mockPrisma.user.findFirst.mockResolvedValueOnce({
+			email: "jane@example.com",
+			username: "someone-else",
+		})
 
 		const res = await request(app).post("/api/auth/register").send({
 			username: "jane",
@@ -74,8 +78,30 @@ describe("POST /api/auth/register", () => {
 			password: "longenough",
 		})
 
-		expect(res.status).toBe(409)
-		expect(res.body.message).toBe("User already exists")
+		expect(res.status).toBe(422)
+		expect(res.body.errors).toContainEqual({
+			field: "email",
+			message: "User already exists",
+		})
+	})
+
+	it("returns 422 when the username is already taken", async () => {
+		mockPrisma.user.findFirst.mockResolvedValueOnce({
+			email: "someone@example.com",
+			username: "jane",
+		})
+
+		const res = await request(app).post("/api/auth/register").send({
+			username: "jane",
+			email: "new@example.com",
+			password: "longenough",
+		})
+
+		expect(res.status).toBe(422)
+		expect(res.body.errors).toContainEqual({
+			field: "username",
+			message: "Username is taken",
+		})
 	})
 
 	it("returns 422 for invalid payload", async () => {

@@ -1,5 +1,7 @@
+import axios, { AxiosError, type AxiosInstance } from "axios"
 import { createHmac, timingSafeEqual } from "node:crypto"
 import { AppError } from "../errors/AppError.js"
+import { headerValue } from "../helpers/index.js"
 import type {
 	InitializePaymentInput,
 	InitializePaymentResult,
@@ -8,9 +10,15 @@ import type {
 	VerifyPaymentResult,
 	WebhookEvent,
 	WebhookHeaders,
-} from "../interfaces/payment-gateway.interface.js"
+} from "../types/payment.js"
 
 const PAYSTACK_API = "https://api.paystack.co"
+
+type PaystackResponse<T> = {
+	status: boolean
+	message: string
+	data: T
+}
 
 const mapStatus = (status: string): NormalizedPaymentStatus => {
 	switch (status) {
@@ -26,38 +34,46 @@ const mapStatus = (status: string): NormalizedPaymentStatus => {
 	}
 }
 
-const headerValue = (headers: WebhookHeaders, key: string): string | null => {
-	const raw = headers[key] ?? headers[key.toLowerCase()]
-	if (Array.isArray(raw)) return raw[0] ?? null
-	return typeof raw === "string" ? raw : null
-}
-
 export const createPaystackGateway = (secretKey: string): PaymentGateway => {
-	const authHeaders = {
-		Authorization: `Bearer ${secretKey}`,
-		"Content-Type": "application/json",
-	}
+	const client: AxiosInstance = axios.create({
+		baseURL: PAYSTACK_API,
+		headers: {
+			Authorization: `Bearer ${secretKey}`,
+			"Content-Type": "application/json",
+		},
+	})
 
 	const call = async <T>(
 		path: string,
-		init?: RequestInit
-	): Promise<{ status: boolean; message: string; data: T }> => {
-		const response = await fetch(`${PAYSTACK_API}${path}`, {
-			...init,
-			headers: { ...authHeaders, ...(init?.headers ?? {}) },
-		})
-		const body = (await response.json()) as {
-			status: boolean
-			message: string
-			data: T
+		config?: { method?: "GET" | "POST"; data?: unknown }
+	): Promise<PaystackResponse<T>> => {
+		try {
+			const response = await client.request<PaystackResponse<T>>({
+				url: path,
+				method: config?.method ?? "GET",
+				data: config?.data,
+			})
+			const body = response.data
+			if (!body.status) {
+				throw new AppError(
+					response.status || 502,
+					`Paystack error: ${body.message ?? "unknown"}`
+				)
+			}
+			return body
+		} catch (error) {
+			if (error instanceof AppError) throw error
+			if (error instanceof AxiosError) {
+				const body = error.response?.data as
+					| PaystackResponse<unknown>
+					| undefined
+				throw new AppError(
+					error.response?.status || 502,
+					`Paystack error: ${body?.message ?? error.message}`
+				)
+			}
+			throw error
 		}
-		if (!response.ok || !body.status) {
-			throw new AppError(
-				response.status || 502,
-				`Paystack error: ${body.message ?? "unknown"}`
-			)
-		}
-		return body
 	}
 
 	return {
@@ -72,14 +88,14 @@ export const createPaystackGateway = (secretKey: string): PaymentGateway => {
 				reference: string
 			}>("/transaction/initialize", {
 				method: "POST",
-				body: JSON.stringify({
+				data: {
 					email: input.email,
 					amount: input.amount,
 					currency: input.currency,
 					reference: input.reference,
 					callback_url: input.callbackUrl,
 					metadata: input.metadata,
-				}),
+				},
 			})
 
 			return {
@@ -119,6 +135,7 @@ export const createPaystackGateway = (secretKey: string): PaymentGateway => {
 
 			const a = Buffer.from(expected, "hex")
 			const b = Buffer.from(signature, "hex")
+
 			if (a.length !== b.length || !timingSafeEqual(a, b)) {
 				throw new AppError(401, "Invalid Paystack signature")
 			}

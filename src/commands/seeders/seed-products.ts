@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker"
 import type { CommandModule } from "yargs"
-import { prisma } from "../database/prisma.js"
+import { prisma } from "../../database/prisma.js"
 
 const PRODUCT_COUNT = 200
 const CATEGORY_NAMES = [

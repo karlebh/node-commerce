@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import { env } from "../configs/env.js"
 import { AppError } from "../errors/AppError.js"
 import { prisma } from "../database/prisma.js"
+import { getStockFailureReason } from "../helpers/index.js"
 
 type InvalidOrderItem = {
 	product: { id: string; name: string } | null
@@ -17,150 +18,137 @@ const placeOrderInTransaction = async (
 	tx: Prisma.TransactionClient,
 	userId: string
 ): Promise<PlacedOrder> => {
-		const cart = await tx.cart.findUnique({
-			where: { userId },
-			include: {
-				items: {
-					where: { deletedAt: null },
-					select: { id: true, productId: true, quantity: true },
-				},
+	const cart = await tx.cart.findUnique({
+		where: { userId },
+		include: {
+			items: {
+				where: { deletedAt: null },
+				select: { id: true, productId: true, quantity: true },
 			},
-		})
+		},
+	})
 
-		if (!cart || cart.items.length === 0) {
-			throw new AppError(
-				422,
-				"Cannot create an order from an empty cart."
-			)
+	if (!cart || cart.items.length === 0) {
+		throw new AppError(422, "Cannot create an order from an empty cart.")
+	}
+
+	const products = await tx.product.findMany({
+		where: { id: { in: cart.items.map((item) => item.productId) } },
+		select: {
+			id: true,
+			name: true,
+			price: true,
+			stock: true,
+			isActive: true,
+			deletedAt: true,
+		},
+	})
+	const productsById = new Map(
+		products.map((product) => [product.id, product])
+	)
+
+	const orderItems: Array<{
+		item: (typeof cart.items)[number]
+		product: (typeof products)[number]
+	}> = []
+	const invalidItems: InvalidOrderItem[] = []
+
+	for (const item of cart.items) {
+		const product = productsById.get(item.productId)
+		const base = {
+			product: product ? { id: product.id, name: product.name } : null,
+			requestedQuantity: item.quantity,
 		}
 
-		const products = await tx.product.findMany({
-			where: { id: { in: cart.items.map((item) => item.productId) } },
-			select: {
-				id: true,
-				name: true,
-				price: true,
-				stock: true,
-				isActive: true,
-				deletedAt: true,
-			},
-		})
-		const productsById = new Map(
-			products.map((product) => [product.id, product])
-		)
-
-		const orderItems: Array<{
-			item: (typeof cart.items)[number]
-			product: (typeof products)[number]
-		}> = []
-		const invalidItems: InvalidOrderItem[] = []
-
-		for (const item of cart.items) {
-			const product = productsById.get(item.productId)
-			const base = {
-				product: product
-					? { id: product.id, name: product.name }
-					: null,
-				requestedQuantity: item.quantity,
-			}
-
-			if (!product) {
-				invalidItems.push({ ...base, reason: "product_not_found" })
-			} else if (product.deletedAt) {
-				invalidItems.push({ ...base, reason: "product_deleted" })
-			} else if (!product.isActive) {
-				invalidItems.push({ ...base, reason: "product_inactive" })
-			} else if (item.quantity < 1) {
-				invalidItems.push({ ...base, reason: "invalid_quantity" })
-			} else if (product.stock < item.quantity) {
-				invalidItems.push({
-					...base,
-					reason: "insufficient_stock",
-					availableStock: product.stock,
-				})
-			} else {
-				orderItems.push({ item, product })
-			}
-		}
-
-		if (invalidItems.length > 0) {
-			throw new AppError(
-				422,
-				"One or more cart items cannot be ordered.",
-				{ items: invalidItems }
-			)
-		}
-
-		for (const { item, product } of orderItems) {
-			const reserved = await tx.product.updateMany({
-				where: {
-					id: product.id,
-					isActive: true,
-					deletedAt: null,
-					stock: { gte: item.quantity },
-				},
-				data: { stock: { decrement: item.quantity } },
+		if (!product) {
+			invalidItems.push({ ...base, reason: "product_not_found" })
+		} else if (product.deletedAt) {
+			invalidItems.push({ ...base, reason: "product_deleted" })
+		} else if (!product.isActive) {
+			invalidItems.push({ ...base, reason: "product_inactive" })
+		} else if (item.quantity < 1) {
+			invalidItems.push({ ...base, reason: "invalid_quantity" })
+		} else if (product.stock < item.quantity) {
+			invalidItems.push({
+				...base,
+				reason: "insufficient_stock",
+				availableStock: product.stock,
 			})
-
-			if (reserved.count === 0) {
-				const currentProduct = await tx.product.findUnique({
-					where: { id: product.id },
-					select: { stock: true, isActive: true, deletedAt: true },
-				})
-				const reason = !currentProduct
-					? "product_not_found"
-					: currentProduct.deletedAt
-						? "product_deleted"
-						: !currentProduct.isActive
-							? "product_inactive"
-							: "insufficient_stock"
-
-				throw new AppError(
-					409,
-					"Cart items changed while the order was being placed.",
-					{
-						items: [
-							{
-								product: currentProduct
-									? { id: product.id, name: product.name }
-									: null,
-								requestedQuantity: item.quantity,
-								reason,
-								...(currentProduct && {
-									availableStock: currentProduct.stock,
-								}),
-							},
-						],
-					}
-				)
-			}
+		} else {
+			orderItems.push({ item, product })
 		}
+	}
 
-		const total = orderItems.reduce(
-			(sum, { item, product }) => sum + product.price * item.quantity,
-			0
-		)
-		const order = await tx.order.create({
-			data: {
-				userId,
-				total,
-				items: {
-					create: orderItems.map(({ item, product }) => ({
-						productName: product.name,
-						unitPrice: product.price,
-						quantity: item.quantity,
-						product: { connect: { id: product.id } },
-					})),
-				},
+	if (invalidItems.length > 0) {
+		throw new AppError(422, "One or more cart items cannot be ordered.", {
+			items: invalidItems,
+		})
+	}
+
+	for (const { item, product } of orderItems) {
+		const reserved = await tx.product.updateMany({
+			where: {
+				id: product.id,
+				isActive: true,
+				deletedAt: null,
+				stock: { gte: item.quantity },
 			},
-			include: { items: true },
+			data: { stock: { decrement: item.quantity } },
 		})
 
-		await tx.cartItem.deleteMany({
-			where: { id: { in: cart.items.map((item) => item.id) } },
-		})
+		if (reserved.count === 0) {
+			const currentProduct = await tx.product.findUnique({
+				where: { id: product.id },
+				select: { stock: true, isActive: true, deletedAt: true },
+			})
+			const reason = getStockFailureReason(currentProduct)
 
-		return order
+			throw new AppError(
+				409,
+				"Cart items changed while the order was being placed.",
+				{
+					items: [
+						{
+							product: currentProduct
+								? { id: product.id, name: product.name }
+								: null,
+							requestedQuantity: item.quantity,
+							reason,
+							...(currentProduct && {
+								availableStock: currentProduct.stock,
+							}),
+						},
+					],
+				}
+			)
+		}
+	}
+
+	const total = orderItems.reduce(
+		(sum, { item, product }) => sum + product.price * item.quantity,
+		0
+	)
+	const order = await tx.order.create({
+		data: {
+			userId,
+			total,
+			items: {
+				create: orderItems.map(({ item, product }) => ({
+					productName: product.name,
+					unitPrice: product.price,
+					quantity: item.quantity,
+					product: { connect: { id: product.id } },
+				})),
+			},
+		},
+		include: { items: true },
+	})
+
+	await tx.cartItem.deleteMany({
+		where: { id: { in: cart.items.map((item) => item.id) } },
+	})
+
+	return order
 }
 
 export const placeOrder = async (userId: string): Promise<PlacedOrder> =>
@@ -172,6 +160,27 @@ const ORDER_REQUEST_HASH = createHash("sha256")
 
 const serializeOrder = (order: PlacedOrder): Prisma.InputJsonValue =>
 	JSON.parse(JSON.stringify(order))
+
+type IdempotencyRecord = {
+	status: IdempotencyStatus
+	responseStatus: number | null
+	responseBody: Prisma.JsonValue | null
+}
+
+const getReplayableOrder = (
+	record: IdempotencyRecord
+): Prisma.JsonObject | null => {
+	if (record.status !== IdempotencyStatus.COMPLETED) return null
+	if (record.responseStatus !== 201) return null
+
+	const body = record.responseBody
+	if (body === null || typeof body !== "object" || Array.isArray(body)) {
+		return null
+	}
+	if (typeof body.id !== "string") return null
+
+	return body
+}
 
 const reserveOrderIdempotencyKey = async (
 	userId: string,
@@ -196,6 +205,7 @@ const reserveOrderIdempotencyKey = async (
 
 		return { kind: "reserved", id: record.id }
 	} catch (error) {
+		//catch only unique unique contraint error because it will be dealth with later in the code
 		if (
 			!(
 				error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -228,7 +238,10 @@ const reserveOrderIdempotencyKey = async (
 			return { kind: "reserved", id: existing.id }
 		}
 
-		return reserveOrderIdempotencyKey(userId, key)
+		throw new AppError(
+			409,
+			"Order placement with this idempotency key is still in progress"
+		)
 	}
 
 	if (existing.requestHash !== ORDER_REQUEST_HASH) {
@@ -238,16 +251,9 @@ const reserveOrderIdempotencyKey = async (
 		)
 	}
 
-	const responseBody = existing.responseBody
-	if (
-		existing.status === IdempotencyStatus.COMPLETED &&
-		responseBody !== null &&
-		typeof responseBody === "object" &&
-		!Array.isArray(responseBody) &&
-		typeof responseBody.id === "string" &&
-		existing.responseStatus === 201
-	) {
-		return { kind: "replay", order: responseBody }
+	const replayableOrder = getReplayableOrder(existing)
+	if (replayableOrder) {
+		return { kind: "replay", order: replayableOrder }
 	}
 
 	if (existing.status === IdempotencyStatus.COMPLETED) {

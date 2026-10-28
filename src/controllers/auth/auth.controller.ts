@@ -7,25 +7,19 @@ import {
 	registerUserSchema,
 } from "../../validations/auth.schemas.js"
 import { createSessionAndToken, publicUser } from "../../helpers/index.js"
-import { addEmailJob } from "../../jobs/emailQueue.js"
 import type {
 	AuthenticatedHandler,
 	AuthenticatedRequest,
 } from "../../middleware/protectedHandler.js"
+import { addEmailJob } from "../../jobs/emailQueue.js"
 
 export const register: RequestHandler = async (
 	request: Request,
 	response: Response
 ) => {
-	registerUserSchema.parse(request.body)
-
-	const { username, email, password } = request.body
-
-	const existing = await prisma.user.findUnique({
-		where: { email },
-	})
-
-	if (existing) throw new AppError(409, "User already exists")
+	const { username, email, password } = await registerUserSchema.parseAsync(
+		request.body
+	)
 
 	const passwordHash = await bcrypt.hash(password, 12)
 

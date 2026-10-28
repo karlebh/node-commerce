@@ -5,25 +5,35 @@ import {
 	PaymentStatus,
 	Prisma,
 } from "@prisma/client"
-import { createHash } from "node:crypto"
 import { env } from "../configs/env.js"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
 import { getGateway } from "../gateways/index.js"
+import {
+	generateReference,
+	hashPaymentRequest,
+	isReplayablePaymentSuccess,
+	serializeResponse,
+} from "../helpers/index.js"
 import type {
+	InitializePaymentArgs,
+	InitializePaymentResponse,
 	NormalizedPaymentStatus,
+	PaymentOutcomeArgs,
 	PaymentProviderName,
 	WebhookHeaders,
-} from "../interfaces/payment-gateway.interface.js"
+} from "../types/payment.js"
 
 const PROVIDER_NAME_TO_ENUM: Record<PaymentProviderName, PaymentProvider> = {
 	paystack: PaymentProvider.PAYSTACK,
 	flutterwave: PaymentProvider.FLUTTERWAVE,
+	stripe: PaymentProvider.STRIPE,
 }
 
 const PROVIDER_ENUM_TO_NAME: Record<PaymentProvider, PaymentProviderName> = {
 	[PaymentProvider.PAYSTACK]: "paystack",
 	[PaymentProvider.FLUTTERWAVE]: "flutterwave",
+	[PaymentProvider.STRIPE]: "stripe",
 }
 
 const STATUS_MAP: Record<NormalizedPaymentStatus, PaymentStatus> = {
@@ -32,41 +42,6 @@ const STATUS_MAP: Record<NormalizedPaymentStatus, PaymentStatus> = {
 	pending: PaymentStatus.PENDING,
 	abandoned: PaymentStatus.ABANDONED,
 }
-
-const generateReference = (): string =>
-	`pay_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
-
-export type InitializePaymentArgs = {
-	userId: string
-	email: string
-	amount: number
-	currency?: string | undefined
-	provider: PaymentProviderName
-	orderId?: string | undefined
-	metadata?: Record<string, unknown> | undefined
-}
-
-type InitializePaymentResponse = {
-	authorizationUrl: string
-	reference: string
-	payment: Payment
-}
-
-const hashPaymentRequest = (args: InitializePaymentArgs): string =>
-	createHash("sha256")
-		.update(
-			JSON.stringify({
-				amount: args.amount,
-				currency: args.currency ?? "NGN",
-				provider: args.provider,
-				orderId: args.orderId ?? null,
-			})
-		)
-		.digest("hex")
-
-const serializeResponse = (
-	response: InitializePaymentResponse
-): Prisma.InputJsonValue => JSON.parse(JSON.stringify(response))
 
 const reservePaymentIdempotencyKey = async (
 	userId: string,
@@ -124,7 +99,10 @@ const reservePaymentIdempotencyKey = async (
 			return { kind: "reserved", id: existing.id }
 		}
 
-		return reservePaymentIdempotencyKey(userId, key, requestHash)
+		throw new AppError(
+			409,
+			"Payment initialization with this idempotency key is still in progress"
+		)
 	}
 
 	if (existing.requestHash !== requestHash) {
@@ -134,22 +112,10 @@ const reservePaymentIdempotencyKey = async (
 		)
 	}
 
-	const responseBody = existing.responseBody
-	if (
-		existing.status === IdempotencyStatus.COMPLETED &&
-		responseBody !== null &&
-		typeof responseBody === "object" &&
-		!Array.isArray(responseBody) &&
-		typeof responseBody.authorizationUrl === "string" &&
-		typeof responseBody.reference === "string" &&
-		responseBody.payment !== null &&
-		typeof responseBody.payment === "object" &&
-		!Array.isArray(responseBody.payment) &&
-		existing.responseStatus === 201
-	) {
+	if (isReplayablePaymentSuccess(existing)) {
 		return {
 			kind: "replay",
-			response: responseBody,
+			response: existing.responseBody,
 		}
 	}
 
@@ -320,20 +286,16 @@ export const processWebhook = async (
 	})
 }
 
-type OutcomeArgs = {
-	payment: Payment
-	status: PaymentStatus
-	providerReference: string
-	amount: number
-	currency: string
-	rawVerify: Prisma.InputJsonValue
-}
-
-const applyPaymentOutcome = async (args: OutcomeArgs): Promise<Payment> =>
+const applyPaymentOutcome = async (
+	args: PaymentOutcomeArgs
+): Promise<Payment> =>
 	prisma.$transaction(async (tx) => {
 		const amountMismatch = args.amount !== args.payment.amount
+		const currencyMismatch =
+			args.currency.toUpperCase() !== args.payment.currency.toUpperCase()
 		const finalStatus =
-			args.status === PaymentStatus.SUCCESS && amountMismatch
+			args.status === PaymentStatus.SUCCESS &&
+			(amountMismatch || currencyMismatch)
 				? PaymentStatus.FAILED
 				: args.status
 
