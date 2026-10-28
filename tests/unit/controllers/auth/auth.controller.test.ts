@@ -117,7 +117,10 @@ describe("Auth Controller", () => {
 
 			expect(mockCreateSessionAndToken).toHaveBeenCalledWith("user-123")
 
-			expect(mockAddEmailJob).not.toHaveBeenCalled()
+			expect(mockAddEmailJob).toHaveBeenCalledWith("register", {
+				email: "john@example.com",
+				name: "john",
+			})
 
 			expect(response.status).toHaveBeenCalledWith(201)
 
