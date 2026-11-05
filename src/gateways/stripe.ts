@@ -7,6 +7,8 @@ import type {
 	InitializePaymentResult,
 	NormalizedPaymentStatus,
 	PaymentGateway,
+	RefundInput,
+	RefundResult,
 	VerifyPaymentResult,
 	WebhookEvent,
 	WebhookHeaders,
@@ -177,6 +179,28 @@ export const createStripeGateway = (
 				currency: (session.currency ?? "usd").toUpperCase(),
 				providerReference: session.payment_intent ?? session.id,
 				raw: session,
+			}
+		},
+
+		async refundPayment(input: RefundInput): Promise<RefundResult> {
+			const paymentIntent = input.providerReference
+			if (!paymentIntent) {
+				throw new AppError(
+					422,
+					"Stripe payment_intent id required for refund"
+				)
+			}
+			const body = new URLSearchParams()
+			body.set("payment_intent", paymentIntent)
+			body.set("amount", String(input.amount))
+			if (input.reason) body.set("reason", "requested_by_customer")
+			const refund = await call<{ id: string; status: string }>(
+				"/refunds",
+				{ method: "POST", body }
+			)
+			return {
+				providerReference: refund.id,
+				raw: refund,
 			}
 		},
 

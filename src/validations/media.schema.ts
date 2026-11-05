@@ -19,9 +19,9 @@ export const ALLOWED_IMAGE_TYPES = [
 
 export const imageSchema = z.object({
 	imageableType: z.enum(ImageableType),
-	imageableId: z.cuid2(),
+	imageableId: z.uuid(),
 })
 
 export const deleteImageSchema = z.object({
-	id: z.cuid2(),
+	id: z.uuid(),
 })

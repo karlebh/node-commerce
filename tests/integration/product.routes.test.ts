@@ -30,7 +30,7 @@ vi.mock("../../src/jobs/emailQueue.js", () => ({
 }))
 
 const { app } = await import("../../src/app.js")
-const VALID_CUID2 = "clabcdefghij0123456789ab"
+const VALID_UUID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 const authFor = async (userId = "u1"): Promise<string> => {
 	const { env } = await import("../../src/configs/env.js")
@@ -79,25 +79,25 @@ describe("GET /api/products", () => {
 describe("GET /api/products/:id", () => {
 	beforeEach(() => vi.resetAllMocks())
 
-	it("returns 422 for a clearly invalid cuid2", async () => {
-		const res = await request(app).get("/api/products/NOT_A_CUID2!")
+	it("returns 422 for a clearly invalid uuid", async () => {
+		const res = await request(app).get("/api/products/NOT_A_UUID!")
 		expect(res.status).toBe(422)
 	})
 
 	it("returns a product by id", async () => {
 		mockPrisma.product.findUnique.mockResolvedValueOnce({
-			id: VALID_CUID2,
+			id: VALID_UUID,
 			isActive: true,
 			review: [],
 		})
-		const res = await request(app).get(`/api/products/${VALID_CUID2}`)
+		const res = await request(app).get(`/api/products/${VALID_UUID}`)
 		expect(res.status).toBe(200)
-		expect(res.body.data.id).toBe(VALID_CUID2)
+		expect(res.body.data.id).toBe(VALID_UUID)
 	})
 
 	it("404s when inactive or missing", async () => {
 		mockPrisma.product.findUnique.mockResolvedValueOnce(null)
-		const res = await request(app).get(`/api/products/${VALID_CUID2}`)
+		const res = await request(app).get(`/api/products/${VALID_UUID}`)
 		expect(res.status).toBe(404)
 	})
 })

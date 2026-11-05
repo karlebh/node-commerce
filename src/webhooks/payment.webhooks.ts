@@ -16,6 +16,7 @@ type PaymentWebhookEvents = {
 	"payment.failed": [PaymentWebhookContext]
 	"payment.abandoned": [PaymentWebhookContext]
 	"payment.pending": [PaymentWebhookContext]
+	"payment.refunded": [PaymentWebhookContext]
 }
 
 type PaymentWebhookEventName = keyof PaymentWebhookEvents
@@ -47,6 +48,7 @@ const STATUS_TO_EVENT: Record<PaymentStatus, PaymentWebhookEventName | null> = {
 	FAILED: "payment.failed",
 	ABANDONED: "payment.abandoned",
 	PENDING: "payment.pending",
+	REFUNDED: "payment.refunded",
 }
 
 export const dispatchPaymentWebhookEvent = (

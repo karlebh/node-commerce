@@ -46,11 +46,22 @@ export type WebhookHeaders = Record<string, string | string[] | undefined>
 export type InitializePaymentArgs = {
 	userId: string
 	email: string
-	amount: number
-	currency?: string | undefined
 	provider: PaymentProviderName
-	orderId?: string | undefined
+	orderId: string
 	metadata?: Record<string, unknown> | undefined
+}
+
+export type RefundInput = {
+	reference: string
+	providerReference: string
+	amount: number
+	currency: string
+	reason?: string | undefined
+}
+
+export type RefundResult = {
+	providerReference: string
+	raw: unknown
 }
 
 export type InitializePaymentResponse = {
@@ -78,4 +89,6 @@ export interface PaymentGateway {
 	verifyPayment(reference: string): Promise<VerifyPaymentResult>
 
 	parseWebhook(rawBody: Buffer, headers: WebhookHeaders): WebhookEvent
+
+	refundPayment?(input: RefundInput): Promise<RefundResult>
 }

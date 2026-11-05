@@ -4,6 +4,7 @@ import { prisma } from "../database/prisma.js"
 import {
 	initializePaymentIdempotently,
 	processWebhook,
+	refundPayment as refundPaymentService,
 	verifyPayment as verifyPaymentService,
 } from "../services/payment.service.js"
 import type {
@@ -12,6 +13,8 @@ import type {
 } from "../middleware/protectedHandler.js"
 import {
 	initializePaymentSchema,
+	refundBodySchema,
+	refundPaymentSchema,
 	verifyPaymentSchema,
 	webhookProviderSchema,
 } from "../validations/payment.schema.js"
@@ -24,9 +27,7 @@ export const initializePayment: AuthenticatedHandler = async (
 	response: Response
 ): Promise<Response> => {
 	const input = initializePaymentSchema.parse(request.body)
-	const key = idempotencyKeySchema.safeParse(
-		request.get("Idempotency-Key")
-	)
+	const key = idempotencyKeySchema.safeParse(request.get("Idempotency-Key"))
 	if (!key.success) {
 		throw new AppError(400, "A valid Idempotency-Key header is required")
 	}
@@ -41,8 +42,6 @@ export const initializePayment: AuthenticatedHandler = async (
 		{
 			userId: request.userId,
 			email: user.email,
-			amount: input.amount,
-			currency: input.currency,
 			provider: input.provider,
 			orderId: input.orderId,
 		},
@@ -63,6 +62,25 @@ export const verifyPayment: AuthenticatedHandler = async (
 		throw new AppError(404, "Payment not found")
 	}
 
+	return response.status(200).json({ payment })
+}
+
+export const refundPayment: AuthenticatedHandler = async (
+	request: AuthenticatedRequest,
+	response: Response
+): Promise<Response> => {
+	const { reference } = refundPaymentSchema.parse(request.params)
+	const body = refundBodySchema.parse(request.body ?? {})
+
+	const existing = await prisma.payment.findUnique({
+		where: { reference },
+		select: { userId: true },
+	})
+	if (!existing || existing.userId !== request.userId) {
+		throw new AppError(404, "Payment not found")
+	}
+
+	const payment = await refundPaymentService(reference, body)
 	return response.status(200).json({ payment })
 }
 

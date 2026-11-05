@@ -13,14 +13,23 @@ const { mockPrisma, mockGateway } = vi.hoisted(() => ({
 			create: vi.fn(),
 			update: vi.fn(),
 			findUnique: vi.fn(),
+			findMany: vi.fn(),
 		},
 		paymentWebhookEvent: { create: vi.fn() },
+		order: {
+			findUnique: vi.fn(),
+			update: vi.fn(),
+		},
+		ledgerEntry: {
+			create: vi.fn(),
+		},
 		$transaction: vi.fn(),
 	},
 	mockGateway: {
 		initializePayment: vi.fn(),
 		verifyPayment: vi.fn(),
 		parseWebhook: vi.fn(),
+		refundPayment: vi.fn(),
 	},
 }))
 
@@ -32,6 +41,7 @@ vi.mock("../../../src/configs/env.js", () => ({
 	env: {
 		PAYMENT_CALLBACK_URL: "https://example.test/callback",
 		IDEMPOTENCY_TTL_MS: 86400000,
+		DEFAULT_CURRENCY: "NGN",
 	},
 }))
 
@@ -49,25 +59,33 @@ describe("Idempotent payment initialization", () => {
 	const args = {
 		userId: "user-1",
 		email: "buyer@example.test",
-		amount: 2500,
+		orderId: "order-1",
 		provider: "paystack" as const,
 	}
+	const ORDER_TOTAL = 2500
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mockPrisma.order.findUnique.mockResolvedValue({
+			id: args.orderId,
+			userId: args.userId,
+			total: ORDER_TOTAL,
+			status: "PENDING",
+			deletedAt: null,
+		})
 		mockPrisma.idempotencyKey.create.mockResolvedValue({ id: "key-1" })
 		mockPrisma.idempotencyKey.update.mockImplementation(
 			async ({ data }: { data: Record<string, unknown> }) => data
 		)
 		mockPrisma.payment.create.mockResolvedValue({
 			id: "payment-1",
-			amount: args.amount,
+			amount: ORDER_TOTAL,
 			currency: "NGN",
 		})
 		mockPrisma.payment.update.mockImplementation(
 			async ({ data }: { data: Record<string, unknown> }) => ({
 				id: "payment-1",
-				amount: args.amount,
+				amount: ORDER_TOTAL,
 				currency: "NGN",
 				...data,
 			})
@@ -154,11 +172,62 @@ describe("Idempotent payment initialization", () => {
 
 		await expect(
 			initializePaymentIdempotently(
-				{ ...args, amount: args.amount + 1 },
+				{ ...args, orderId: "order-different" },
 				"request-1"
 			)
 		).rejects.toMatchObject({ statusCode: 409 })
 
 		expect(mockGateway.initializePayment).toHaveBeenCalledTimes(1)
+	})
+
+	it("rejects when order status is not PENDING", async () => {
+		mockPrisma.order.findUnique.mockResolvedValueOnce({
+			id: args.orderId,
+			userId: args.userId,
+			total: ORDER_TOTAL,
+			status: "PAID",
+			deletedAt: null,
+		})
+
+		await expect(
+			initializePaymentIdempotently(args, "key-paid")
+		).rejects.toMatchObject({ statusCode: 409 })
+
+		expect(mockGateway.initializePayment).not.toHaveBeenCalled()
+	})
+
+	it("rejects when order belongs to a different user", async () => {
+		mockPrisma.order.findUnique.mockResolvedValueOnce({
+			id: args.orderId,
+			userId: "another-user",
+			total: ORDER_TOTAL,
+			status: "PENDING",
+			deletedAt: null,
+		})
+
+		await expect(
+			initializePaymentIdempotently(args, "key-forbidden")
+		).rejects.toMatchObject({ statusCode: 404 })
+
+		expect(mockGateway.initializePayment).not.toHaveBeenCalled()
+	})
+
+	it("uses the order total — client cannot override amount", async () => {
+		await initializePaymentIdempotently(args, "key-amount")
+
+		expect(mockGateway.initializePayment).toHaveBeenCalledTimes(1)
+		const call = mockGateway.initializePayment.mock.calls[0]?.[0] as {
+			amount: number
+			currency: string
+		}
+		expect(call.amount).toBe(ORDER_TOTAL)
+		expect(call.currency).toBe("NGN")
+
+		const paymentCreate = mockPrisma.payment.create.mock
+			.calls[0]?.[0] as {
+			data: { amount: number; currency: string }
+		}
+		expect(paymentCreate.data.amount).toBe(ORDER_TOTAL)
+		expect(paymentCreate.data.currency).toBe("NGN")
 	})
 })

@@ -47,7 +47,7 @@ const { index, addItem, removeIteam, clearCart } = await import(
 	"../../../src/controllers/cart.controller.js"
 )
 
-const VALID_CUID2 = "clabcdefghij0123456789ab"
+const VALID_UUID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 describe("Cart Controller", () => {
 	beforeEach(() => {
@@ -116,7 +116,7 @@ describe("Cart Controller", () => {
 		it("adds a new item under a transaction", async () => {
 			const tx = buildTx()
 			tx.product.findUnique.mockResolvedValue({
-				id: VALID_CUID2,
+				id: VALID_UUID,
 				name: "P",
 			})
 			tx.cart.upsert.mockResolvedValue({ id: "cart-1" })
@@ -129,7 +129,7 @@ describe("Cart Controller", () => {
 				productId: string
 				quantity: number
 			}> = {
-				body: { productId: VALID_CUID2, quantity: 3 },
+				body: { productId: VALID_UUID, quantity: 3 },
 				userId: "user-1",
 			}
 			const response = createControllerTestResponse()
@@ -145,11 +145,11 @@ describe("Cart Controller", () => {
 				where: {
 					cartId_productId: {
 						cartId: "cart-1",
-						productId: VALID_CUID2,
+						productId: VALID_UUID,
 					},
 				},
 				create: {
-					productId: VALID_CUID2,
+					productId: VALID_UUID,
 					quantity: 3,
 					cartId: "cart-1",
 				},
@@ -169,7 +169,7 @@ describe("Cart Controller", () => {
 				invokeController(
 					addItem,
 					{
-						body: { productId: VALID_CUID2, quantity: 1 },
+						body: { productId: VALID_UUID, quantity: 1 },
 						userId: "u1",
 					},
 					createControllerTestResponse()
@@ -180,11 +180,11 @@ describe("Cart Controller", () => {
 
 	describe("removeIteam", () => {
 		it("deletes a cart item by id", async () => {
-			mockPrisma.cartItem.delete.mockResolvedValue({ id: VALID_CUID2 })
+			mockPrisma.cartItem.delete.mockResolvedValue({ id: VALID_UUID })
 
 			const request: ControllerTestRequest<Record<string, never>> = {
 				body: {},
-				params: { id: VALID_CUID2 },
+				params: { id: VALID_UUID },
 				userId: "user-1",
 			}
 			const response = createControllerTestResponse()
@@ -192,7 +192,7 @@ describe("Cart Controller", () => {
 			await invokeController(removeIteam, request, response)
 
 			expect(mockPrisma.cartItem.delete).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2 },
+				where: { id: VALID_UUID },
 			})
 			expect(response.status).toHaveBeenCalledWith(200)
 		})

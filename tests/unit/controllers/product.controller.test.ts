@@ -119,7 +119,7 @@ describe("Product Controller", () => {
 
 	it("shows an active product by ID", async () => {
 		const product: ProductRecord = {
-			id: "abcdefgh12345678abcdefgh",
+			id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
 			name: "Air Max",
 			isActive: true,
 		}
@@ -143,7 +143,7 @@ describe("Product Controller", () => {
 	it("throws a not found error if the product is missing", async () => {
 		const request: ControllerTestRequest<Record<string, never>> = {
 			body: {},
-			params: { id: "abcdefgh12345678abcdefgh" },
+			params: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 		}
 		const response = createControllerTestResponse()
 
@@ -197,7 +197,7 @@ describe("Product Controller", () => {
 
 	it("updates only the provided fields and regenerates the slug when the name changes", async () => {
 		const request: ControllerTestRequest<UpdateProductBody> = {
-			params: { id: "abcdefgh12345678abcdefgh" },
+			params: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 			body: { name: "Updated Name", price: 2500 },
 		}
 		const response = createControllerTestResponse()
@@ -208,7 +208,7 @@ describe("Product Controller", () => {
 		await invokeController(update, request, response)
 
 		expect(mockPrisma.product.update).toHaveBeenCalledWith({
-			where: { id: "abcdefgh12345678abcdefgh" },
+			where: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 			data: {
 				name: "Updated Name",
 				price: 2500,
@@ -224,14 +224,14 @@ describe("Product Controller", () => {
 	it("deletes a product by ID", async () => {
 		const request: ControllerTestRequest<Record<string, never>> = {
 			body: {},
-			params: { id: "abcdefgh12345678abcdefgh" },
+			params: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 		}
 		const response = createControllerTestResponse()
 
 		await invokeController(destroy, request, response)
 
 		expect(mockPrisma.product.delete).toHaveBeenCalledWith({
-			where: { id: "abcdefgh12345678abcdefgh" },
+			where: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 		})
 		expect(response.status).toHaveBeenCalledWith(200)
 		expect(response.json).toHaveBeenCalledWith({

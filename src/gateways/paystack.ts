@@ -7,6 +7,8 @@ import type {
 	InitializePaymentResult,
 	NormalizedPaymentStatus,
 	PaymentGateway,
+	RefundInput,
+	RefundResult,
 	VerifyPaymentResult,
 	WebhookEvent,
 	WebhookHeaders,
@@ -118,6 +120,26 @@ export const createPaystackGateway = (secretKey: string): PaymentGateway => {
 				status: mapStatus(data.status),
 				amount: data.amount,
 				currency: data.currency,
+				providerReference: String(data.id),
+				raw: data,
+			}
+		},
+
+		async refundPayment(input: RefundInput): Promise<RefundResult> {
+			const { data } = await call<{
+				transaction: { id: number; reference: string }
+				id: number
+			}>("/refund", {
+				method: "POST",
+				data: {
+					transaction: input.providerReference || input.reference,
+					amount: input.amount,
+					currency: input.currency,
+					merchant_note: input.reason,
+				},
+			})
+
+			return {
 				providerReference: String(data.id),
 				raw: data,
 			}

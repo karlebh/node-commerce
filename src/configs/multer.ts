@@ -4,7 +4,7 @@ import fs from "fs"
 import { env } from "./env.js"
 import { ALLOWED_IMAGE_TYPES } from "../validations/media.schema.js"
 
-export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR as string)
+export const UPLOAD_DIR = path.resolve(env.UPLOAD_DIR)
 
 const DOC_MIMES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
 

@@ -28,7 +28,7 @@ vi.mock("../../src/jobs/emailQueue.js", () => ({
 }))
 
 const { app } = await import("../../src/app.js")
-const VALID_CUID2 = "clabcdefghij0123456789ab"
+const VALID_UUID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 const authFor = async (userId = "u1"): Promise<string> => {
 	const { env } = await import("../../src/configs/env.js")
@@ -63,13 +63,21 @@ describe("GET /api/categories", () => {
 	})
 })
 
-describe("GET /api/categories/:name (route param currently 422s due to app route/param mismatch)", () => {
+describe("GET /api/categories/:id", () => {
 	beforeEach(() => vi.resetAllMocks())
 
-	// The route is defined as /:name but the show controller validates params.id,
-	// so every request to this route hits a ZodError on params.id = undefined.
-	it("422s regardless of path value (schema always fails)", async () => {
-		const res = await request(app).get(`/api/categories/${VALID_CUID2}`)
+	it("returns a category by id", async () => {
+		mockPrisma.category.findUnique.mockResolvedValueOnce({
+			id: VALID_UUID,
+			name: "Shoes",
+		})
+		const res = await request(app).get(`/api/categories/${VALID_UUID}`)
+		expect(res.status).toBe(200)
+		expect(res.body.data.category.id).toBe(VALID_UUID)
+	})
+
+	it("422s when the path value is not a uuid", async () => {
+		const res = await request(app).get("/api/categories/not-a-uuid")
 		expect(res.status).toBe(422)
 	})
 })

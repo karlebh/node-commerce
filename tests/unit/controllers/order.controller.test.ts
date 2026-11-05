@@ -41,7 +41,7 @@ const { index, show, store, update, destroy } = await import(
 	"../../../src/controllers/order.controller.js"
 )
 
-const VALID_CUID2 = "clabcdefghij0123456789ab"
+const VALID_UUID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 describe("Order Controller", () => {
 	beforeEach(() => {
@@ -50,7 +50,7 @@ describe("Order Controller", () => {
 
 	describe("index", () => {
 		it("lists the user's orders with pagination", async () => {
-			const orders = [{ id: VALID_CUID2, status: "PENDING", items: [] }]
+			const orders = [{ id: VALID_UUID, status: "PENDING", items: [] }]
 			mockPrisma.order.findMany.mockResolvedValue(orders)
 			mockPrisma.order.count.mockResolvedValue(1)
 
@@ -107,7 +107,7 @@ describe("Order Controller", () => {
 
 	describe("show", () => {
 		it("returns an order with items", async () => {
-			const order = { id: VALID_CUID2, items: [] }
+			const order = { id: VALID_UUID, items: [] }
 			mockPrisma.order.findUnique.mockResolvedValue(order)
 
 			const response = createControllerTestResponse()
@@ -116,14 +116,14 @@ describe("Order Controller", () => {
 				{
 					body: {},
 					userId: "user-1",
-					params: { id: VALID_CUID2 },
+					params: { id: VALID_UUID },
 				},
 				response
 			)
 
 			expect(mockPrisma.order.findUnique).toHaveBeenCalledWith(
 				expect.objectContaining({
-					where: { id: VALID_CUID2, userId: "user-1" },
+					where: { id: VALID_UUID, userId: "user-1" },
 				})
 			)
 			expect(response.status).toHaveBeenCalledWith(200)
@@ -137,7 +137,7 @@ describe("Order Controller", () => {
 					{
 						body: {},
 						userId: "u1",
-						params: { id: VALID_CUID2 },
+						params: { id: VALID_UUID },
 					},
 					createControllerTestResponse()
 				)
@@ -147,7 +147,7 @@ describe("Order Controller", () => {
 
 	describe("store", () => {
 		it("places an order idempotently via the service", async () => {
-			const order = { id: VALID_CUID2, items: [] }
+			const order = { id: VALID_UUID, items: [] }
 			mockPlaceOrderIdempotently.mockResolvedValue(order)
 
 			const response = createControllerTestResponse()
@@ -188,7 +188,7 @@ describe("Order Controller", () => {
 
 	describe("update", () => {
 		it("updates the order status", async () => {
-			const updated = { id: VALID_CUID2, status: "PAID" }
+			const updated = { id: VALID_UUID, status: "PAID" }
 			mockPrisma.order.update.mockResolvedValue(updated)
 
 			const response = createControllerTestResponse()
@@ -197,13 +197,13 @@ describe("Order Controller", () => {
 				{
 					body: { status: "PAID" },
 					userId: "user-1",
-					params: { id: VALID_CUID2 },
+					params: { id: VALID_UUID },
 				},
 				response
 			)
 
 			expect(mockPrisma.order.update).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2, userId: "user-1" },
+				where: { id: VALID_UUID, userId: "user-1" },
 				data: { status: "PAID" },
 			})
 			expect(response.status).toHaveBeenCalledWith(200)
@@ -220,13 +220,13 @@ describe("Order Controller", () => {
 				{
 					body: {},
 					userId: "user-1",
-					params: { id: VALID_CUID2 },
+					params: { id: VALID_UUID },
 				},
 				response
 			)
 
 			expect(mockPrisma.order.delete).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2, userId: "user-1" },
+				where: { id: VALID_UUID, userId: "user-1" },
 			})
 			expect(response.status).toHaveBeenCalledWith(200)
 		})

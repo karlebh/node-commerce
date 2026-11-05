@@ -10,11 +10,16 @@ import * as cartController from "../controllers/cart.controller.js"
 import * as orderController from "../controllers/order.controller.js"
 import * as notificationController from "../controllers/notification.controller.js"
 import * as paymentController from "../controllers/payment.controller.js"
+import * as reviewController from "../controllers/review.controller.js"
 import * as TaskController from "../controllers/task.controllers.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
 import { requiresGuest } from "../middleware/requiresGuest.js"
+import {
+	paymentReadRateLimiter,
+	paymentWriteRateLimiter,
+} from "../middleware/rateLimiter.js"
 import { prisma } from "../database/prisma.js"
 
 export const productRouter = Router()
@@ -74,22 +79,10 @@ authRouter.get(
 
 export const categoryRouter = Router()
 categoryRouter.get("/", asyncHandler(categoryController.index))
-categoryRouter.get("/:name", asyncHandler(categoryController.show))
+categoryRouter.get("/:id", asyncHandler(categoryController.show))
 categoryRouter.post("/", protectedHandler(categoryController.store))
-categoryRouter.patch(
-	"/:name",
-	protectedHandler(
-		categoryController.update,
-		requiresOwnership(prisma.category)
-	)
-)
-categoryRouter.delete(
-	"/:name",
-	protectedHandler(
-		categoryController.destroy,
-		requiresOwnership(prisma.category)
-	)
-)
+categoryRouter.patch("/:id", protectedHandler(categoryController.update))
+categoryRouter.delete("/:id", protectedHandler(categoryController.destroy))
 
 export const imageRouter = Router()
 imageRouter.post("/", protectedHandler(imageController.store))
@@ -108,12 +101,12 @@ cartRouter.post(
 	protectedHandler(cartController.addItem, requiresOwnership(prisma.cart))
 )
 cartRouter.delete(
-	"/:id",
-	protectedHandler(cartController.removeIteam, requiresOwnership(prisma.cart))
-)
-cartRouter.delete(
 	"/clear",
 	protectedHandler(cartController.clearCart, requiresOwnership(prisma.cart))
+)
+cartRouter.delete(
+	"/:id",
+	protectedHandler(cartController.removeIteam, requiresOwnership(prisma.cart))
 )
 
 export const orderRouter = Router()
@@ -134,15 +127,25 @@ orderRouter.put(
 	protectedHandler(orderController.update, requiresOwnership(prisma.order))
 )
 orderRouter.delete(
-	"/",
+	"/:id",
 	protectedHandler(orderController.destroy, requiresOwnership(prisma.order))
 )
 
 export const paymentRouter = Router()
-paymentRouter.post("/", protectedHandler(paymentController.initializePayment))
+paymentRouter.post(
+	"/",
+	paymentWriteRateLimiter,
+	protectedHandler(paymentController.initializePayment)
+)
 paymentRouter.get(
 	"/verify/:reference",
+	paymentReadRateLimiter,
 	protectedHandler(paymentController.verifyPayment)
+)
+paymentRouter.post(
+	"/refund/:reference",
+	paymentWriteRateLimiter,
+	protectedHandler(paymentController.refundPayment)
 )
 
 export const paymentWebhookRouter = Router()
@@ -151,6 +154,11 @@ paymentWebhookRouter.post(
 	express.raw({ type: "*/*", limit: "1mb" }),
 	paymentController.webhook
 )
+
+export const reviewRouter = Router()
+reviewRouter.post("/", protectedHandler(reviewController.store))
+reviewRouter.patch("/:id", protectedHandler(reviewController.update))
+reviewRouter.delete("/:id", protectedHandler(reviewController.destroy))
 
 export const taskRouter = Router()
 taskRouter.get("/", protectedHandler(TaskController.index))

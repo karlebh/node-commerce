@@ -1,4 +1,3 @@
-import { request } from "http"
 import type {
 	AuthenticatedHandler,
 	AuthenticatedRequest,
@@ -10,6 +9,7 @@ import {
 	updateReviewSchema,
 } from "../validations/review.schema.js"
 import { prisma } from "../database/prisma.js"
+import { AppError } from "../errors/AppError.js"
 
 export const store: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
@@ -37,13 +37,19 @@ export const update: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
 	response: Response
 ): Promise<Response> => {
-	const { id, productId, rating, title, body } = updateReviewSchema.parse(
-		request.params
-	)
+	const { id } = destroyReviewSchema.parse(request.params)
+	const { productId, rating, title, body } = updateReviewSchema
+		.omit({ id: true })
+		.parse(request.body)
+
+	const existing = await prisma.review.findUnique({ where: { id } })
+	if (!existing || existing.userId !== request.userId) {
+		throw new AppError(404, "Review not found")
+	}
 
 	const review = await prisma.review.update({
-		where: { userId_productId: { userId: request.userId, productId } },
-		data: { rating, title, body },
+		where: { id },
+		data: { productId, rating, title, body },
 	})
 
 	return response.status(200).json({ review })
@@ -55,7 +61,12 @@ export const destroy: AuthenticatedHandler = async (
 ): Promise<Response> => {
 	const { id } = destroyReviewSchema.parse(request.params)
 
+	const existing = await prisma.review.findUnique({ where: { id } })
+	if (!existing || existing.userId !== request.userId) {
+		throw new AppError(404, "Review not found")
+	}
+
 	await prisma.review.delete({ where: { id } })
 
-	return response.status(200).json({})
+	return response.status(204).send()
 }

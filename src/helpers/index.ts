@@ -122,10 +122,8 @@ export const hashPaymentRequest = (args: InitializePaymentArgs): string =>
 	createHash("sha256")
 		.update(
 			JSON.stringify({
-				amount: args.amount,
-				currency: args.currency ?? "NGN",
 				provider: args.provider,
-				orderId: args.orderId ?? null,
+				orderId: args.orderId,
 			})
 		)
 		.digest("hex")

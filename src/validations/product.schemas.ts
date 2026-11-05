@@ -1,4 +1,4 @@
-import { cuid2, z } from "zod"
+import { z } from "zod"
 
 export const createProductSchema = z.object({
 	name: z.string().trim().min(2).max(150),
@@ -19,5 +19,5 @@ export const updateProductSchema = z.object({
 })
 
 export const productParamSchema = z.object({
-	id: cuid2(),
+	id: z.uuid(),
 })

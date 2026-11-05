@@ -1,5 +1,8 @@
 import {
 	IdempotencyStatus,
+	LedgerDirection,
+	LedgerEntryType,
+	OrderStatus,
 	type Payment,
 	PaymentProvider,
 	PaymentStatus,
@@ -23,6 +26,7 @@ import type {
 	PaymentProviderName,
 	WebhookHeaders,
 } from "../types/payment.js"
+import { dispatchPaymentWebhookEvent } from "../webhooks/payment.webhooks.js"
 
 const PROVIDER_NAME_TO_ENUM: Record<PaymentProviderName, PaymentProvider> = {
 	paystack: PaymentProvider.PAYSTACK,
@@ -179,15 +183,41 @@ export const initializePayment = async (
 ): Promise<InitializePaymentResponse> => {
 	const gateway = getGateway(args.provider)
 	const reference = generateReference()
-	const currency = args.currency ?? "NGN"
+
+	const order = await prisma.order.findUnique({
+		where: { id: args.orderId },
+		select: {
+			id: true,
+			userId: true,
+			total: true,
+			status: true,
+			deletedAt: true,
+		},
+	})
+
+	if (!order || order.deletedAt) {
+		throw new AppError(404, "Order not found")
+	}
+	if (order.userId !== args.userId) {
+		throw new AppError(404, "Order not found")
+	}
+	if (order.status !== OrderStatus.PENDING) {
+		throw new AppError(
+			409,
+			`Order cannot be paid; current status is ${order.status}`
+		)
+	}
+
+	const amount = order.total
+	const currency = env.DEFAULT_CURRENCY
 
 	const payment = await prisma.payment.create({
 		data: {
 			userId: args.userId,
-			orderId: args.orderId ?? null,
+			orderId: order.id,
 			provider: PROVIDER_NAME_TO_ENUM[args.provider],
 			reference,
-			amount: args.amount,
+			amount,
 			currency,
 			status: PaymentStatus.PENDING,
 		},
@@ -196,7 +226,7 @@ export const initializePayment = async (
 	try {
 		const result = await gateway.initializePayment({
 			email: args.email,
-			amount: args.amount,
+			amount,
 			currency,
 			reference,
 			callbackUrl: env.PAYMENT_CALLBACK_URL,
@@ -276,20 +306,24 @@ export const processWebhook = async (
 	})
 	if (!payment) return
 
-	await applyPaymentOutcome({
-		payment,
-		status: STATUS_MAP[event.status],
-		providerReference: event.providerReference,
-		amount: event.amount,
-		currency: event.currency,
-		rawVerify: event.raw as Prisma.InputJsonValue,
-	})
+	await applyPaymentOutcome(
+		{
+			payment,
+			status: STATUS_MAP[event.status],
+			providerReference: event.providerReference,
+			amount: event.amount,
+			currency: event.currency,
+			rawVerify: event.raw as Prisma.InputJsonValue,
+		},
+		{ provider: providerName, rawEvent: event.raw }
+	)
 }
 
 const applyPaymentOutcome = async (
-	args: PaymentOutcomeArgs
-): Promise<Payment> =>
-	prisma.$transaction(async (tx) => {
+	args: PaymentOutcomeArgs,
+	dispatchMeta?: { provider: PaymentProviderName; rawEvent: unknown }
+): Promise<Payment> => {
+	const { updated, order } = await prisma.$transaction(async (tx) => {
 		const amountMismatch = args.amount !== args.payment.amount
 		const currencyMismatch =
 			args.currency.toUpperCase() !== args.payment.currency.toUpperCase()
@@ -308,16 +342,179 @@ const applyPaymentOutcome = async (
 			},
 		})
 
-		if (
+		const transitionedToSuccess =
 			finalStatus === PaymentStatus.SUCCESS &&
-			args.payment.orderId &&
 			args.payment.status !== PaymentStatus.SUCCESS
-		) {
+
+		if (transitionedToSuccess && args.payment.orderId) {
 			await tx.order.update({
 				where: { id: args.payment.orderId },
-				data: { status: "PAID" },
+				data: { status: OrderStatus.PAID },
 			})
 		}
 
-		return updated
+		if (transitionedToSuccess) {
+			await tx.ledgerEntry.create({
+				data: {
+					userId: args.payment.userId,
+					paymentId: args.payment.id,
+					orderId: args.payment.orderId,
+					type: LedgerEntryType.PAYMENT,
+					direction: LedgerDirection.CREDIT,
+					amount: args.payment.amount,
+					currency: args.payment.currency,
+					reference: args.payment.reference,
+					description: `Payment captured for reference ${args.payment.reference}`,
+				},
+			}).catch((error: unknown) => {
+				if (
+					error instanceof Prisma.PrismaClientKnownRequestError &&
+					error.code === "P2002"
+				) {
+					return
+				}
+				throw error
+			})
+		}
+
+		const order = updated.orderId
+			? await tx.order.findUnique({ where: { id: updated.orderId } })
+			: null
+
+		return { updated, order }
 	})
+
+	dispatchPaymentWebhookEvent({
+		payment: updated,
+		order,
+		previousStatus: args.payment.status,
+		provider:
+			dispatchMeta?.provider ?? PROVIDER_ENUM_TO_NAME[updated.provider],
+		rawEvent: dispatchMeta?.rawEvent ?? args.rawVerify,
+	})
+
+	return updated
+}
+
+export const refundPayment = async (
+	reference: string,
+	options: { amount?: number | undefined; reason?: string | undefined } = {}
+): Promise<Payment> => {
+	const payment = await prisma.payment.findUnique({ where: { reference } })
+	if (!payment) throw new AppError(404, "Payment not found")
+
+	if (payment.status !== PaymentStatus.SUCCESS) {
+		throw new AppError(409, "Only successful payments can be refunded")
+	}
+
+	const refundAmount = options.amount ?? payment.amount
+	if (refundAmount <= 0 || refundAmount > payment.amount) {
+		throw new AppError(422, "Invalid refund amount")
+	}
+
+	const gateway = getGateway(PROVIDER_ENUM_TO_NAME[payment.provider])
+	if (!gateway.refundPayment) {
+		throw new AppError(
+			501,
+			`Refunds are not supported for ${payment.provider}`
+		)
+	}
+
+	const result = await gateway.refundPayment({
+		reference,
+		providerReference: payment.providerReference ?? reference,
+		amount: refundAmount,
+		currency: payment.currency,
+		reason: options.reason,
+	})
+
+	const { updated, order } = await prisma.$transaction(async (tx) => {
+		const updated = await tx.payment.update({
+			where: { id: payment.id },
+			data: {
+				status: PaymentStatus.REFUNDED,
+				rawVerify: result.raw as Prisma.InputJsonValue,
+			},
+		})
+
+		if (payment.orderId) {
+			await tx.order.update({
+				where: { id: payment.orderId },
+				data: { status: OrderStatus.REFUNDED },
+			})
+		}
+
+		await tx.ledgerEntry.create({
+			data: {
+				userId: payment.userId,
+				paymentId: payment.id,
+				orderId: payment.orderId,
+				type: LedgerEntryType.REFUND,
+				direction: LedgerDirection.DEBIT,
+				amount: refundAmount,
+				currency: payment.currency,
+				reference: `${payment.reference}:refund:${result.providerReference}`,
+				description:
+					options.reason ??
+					`Refund issued for reference ${payment.reference}`,
+			},
+		})
+
+		const order = updated.orderId
+			? await tx.order.findUnique({ where: { id: updated.orderId } })
+			: null
+
+		return { updated, order }
+	})
+
+	dispatchPaymentWebhookEvent({
+		payment: updated,
+		order,
+		previousStatus: payment.status,
+		provider: PROVIDER_ENUM_TO_NAME[updated.provider],
+		rawEvent: result.raw,
+	})
+
+	return updated
+}
+
+export const reconcilePendingPayments = async (
+	olderThanMs: number,
+	abandonAfterMs: number
+): Promise<{ checked: number; updated: number; abandoned: number }> => {
+	const now = Date.now()
+	const checkCutoff = new Date(now - olderThanMs)
+	const abandonCutoff = new Date(now - abandonAfterMs)
+
+	const pending = await prisma.payment.findMany({
+		where: {
+			status: PaymentStatus.PENDING,
+			createdAt: { lte: checkCutoff },
+		},
+		take: 100,
+		orderBy: { createdAt: "asc" },
+	})
+
+	let updated = 0
+	let abandoned = 0
+
+	for (const payment of pending) {
+		if (payment.createdAt <= abandonCutoff) {
+			await prisma.payment.update({
+				where: { id: payment.id },
+				data: { status: PaymentStatus.ABANDONED },
+			})
+			abandoned += 1
+			continue
+		}
+
+		try {
+			const after = await verifyPayment(payment.reference)
+			if (after.status !== payment.status) updated += 1
+		} catch {
+			// swallow — next run will retry
+		}
+	}
+
+	return { checked: pending.length, updated, abandoned }
+}

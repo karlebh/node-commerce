@@ -43,7 +43,7 @@ const { index, show, store, update, destroy } = await import(
 	"../../../src/controllers/category.controller.js"
 )
 
-const VALID_CUID2 = "clabcdefghij0123456789ab"
+const VALID_UUID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 describe("Category Controller", () => {
 	beforeEach(() => {
@@ -77,19 +77,19 @@ describe("Category Controller", () => {
 
 	describe("show", () => {
 		it("returns a category by id", async () => {
-			const category = { id: VALID_CUID2, name: "Shoes" }
+			const category = { id: VALID_UUID, name: "Shoes" }
 			mockPrisma.category.findUnique.mockResolvedValue(category)
 
 			const request: ControllerTestRequest<Record<string, never>> = {
 				body: {},
-				params: { id: VALID_CUID2 },
+				params: { id: VALID_UUID },
 			}
 			const response = createControllerTestResponse()
 
 			await invokeController(show, request, response)
 
 			expect(mockPrisma.category.findUnique).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2 },
+				where: { id: VALID_UUID },
 			})
 			expect(response.status).toHaveBeenCalledWith(200)
 			expect(response.json).toHaveBeenCalledWith({
@@ -102,7 +102,7 @@ describe("Category Controller", () => {
 
 			const request: ControllerTestRequest<Record<string, never>> = {
 				body: {},
-				params: { id: VALID_CUID2 },
+				params: { id: VALID_UUID },
 			}
 
 			await expect(
@@ -159,20 +159,20 @@ describe("Category Controller", () => {
 	describe("destroy", () => {
 		it("deletes a category and returns 204", async () => {
 			mockPrisma.category.findUnique.mockResolvedValue({
-				id: VALID_CUID2,
+				id: VALID_UUID,
 			})
 			mockPrisma.category.delete.mockResolvedValue({})
 
 			const request: ControllerTestRequest<Record<string, never>> = {
 				body: {},
-				params: { id: VALID_CUID2 },
+				params: { id: VALID_UUID },
 			}
 			const response = createControllerTestResponse()
 
 			await invokeController(destroy, request, response)
 
 			expect(mockPrisma.category.delete).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2 },
+				where: { id: VALID_UUID },
 			})
 			expect(response.status).toHaveBeenCalledWith(204)
 		})
@@ -183,7 +183,7 @@ describe("Category Controller", () => {
 			await expect(
 				invokeController(
 					destroy,
-					{ body: {}, params: { id: VALID_CUID2 } },
+					{ body: {}, params: { id: VALID_UUID } },
 					createControllerTestResponse()
 				)
 			).rejects.toThrow("Not found")
@@ -192,11 +192,11 @@ describe("Category Controller", () => {
 
 	describe("update", () => {
 		it("updates the category name", async () => {
-			const updated = { id: VALID_CUID2, name: "New Name" }
+			const updated = { id: VALID_UUID, name: "New Name" }
 			mockPrisma.category.update.mockResolvedValue(updated)
 
 			const request: ControllerTestRequest<{ name: string }> = {
-				params: { id: VALID_CUID2 },
+				params: { id: VALID_UUID },
 				body: { name: "New Name" },
 			}
 			const response = createControllerTestResponse()
@@ -204,7 +204,7 @@ describe("Category Controller", () => {
 			await invokeController(update, request, response)
 
 			expect(mockPrisma.category.update).toHaveBeenCalledWith({
-				where: { id: VALID_CUID2 },
+				where: { id: VALID_UUID },
 				data: { name: "New Name" },
 			})
 			expect(response.status).toHaveBeenCalledWith(200)

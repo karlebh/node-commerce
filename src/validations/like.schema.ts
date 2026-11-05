@@ -2,12 +2,12 @@ import { LikeableType } from "@prisma/client"
 import { z } from "zod"
 
 export const createLikeSchema = z.object({
-	likeableId: z.cuid2(),
+	likeableId: z.uuid(),
 	likeableType: z.enum(LikeableType),
 })
 
 export const destroyLikeSchema = z.object({
-	likeId: z.cuid2(),
+	likeId: z.uuid(),
 })
 
 export type CreateLikeInput = z.infer<typeof createLikeSchema>

@@ -15,11 +15,14 @@ vi.mock("../../../src/services/payment.service.js", () => ({
 	initializePaymentIdempotently: mockInitializePaymentIdempotently,
 	processWebhook: vi.fn(),
 	verifyPayment: vi.fn(),
+	refundPayment: vi.fn(),
 }))
 
 const { initializePayment } = await import(
 	"../../../src/controllers/payment.controller.js"
 )
+
+const ORDER_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 describe("Payment Controller", () => {
 	beforeEach(() => {
@@ -36,10 +39,10 @@ describe("Payment Controller", () => {
 
 	it("requires an Idempotency-Key header", async () => {
 		const request: ControllerTestRequest<{
-			amount: number
 			provider: "paystack"
+			orderId: string
 		}> = {
-			body: { amount: 2500, provider: "paystack" },
+			body: { provider: "paystack", orderId: ORDER_ID },
 			userId: "user-1",
 			get: vi.fn().mockReturnValue(undefined),
 		}
@@ -57,11 +60,10 @@ describe("Payment Controller", () => {
 
 	it("passes the key and normalized payment input to the service", async () => {
 		const request: ControllerTestRequest<{
-			amount: number
 			provider: "paystack"
-			currency: string
+			orderId: string
 		}> = {
-			body: { amount: 2500, provider: "paystack", currency: "NGN" },
+			body: { provider: "paystack", orderId: ORDER_ID },
 			userId: "user-1",
 			get: vi.fn().mockReturnValue("request-1"),
 		}
@@ -73,10 +75,8 @@ describe("Payment Controller", () => {
 			{
 				userId: "user-1",
 				email: "buyer@example.test",
-				amount: 2500,
 				provider: "paystack",
-				currency: "NGN",
-				orderId: undefined,
+				orderId: ORDER_ID,
 			},
 			"request-1"
 		)
@@ -84,5 +84,50 @@ describe("Payment Controller", () => {
 		expect(response.json).toHaveBeenCalledWith(
 			expect.objectContaining({ reference: "payment-ref" })
 		)
+	})
+
+	it("rejects when the client tries to specify amount", async () => {
+		const request: ControllerTestRequest<Record<string, unknown>> = {
+			body: {
+				provider: "paystack",
+				orderId: ORDER_ID,
+				amount: 99,
+			},
+			userId: "user-1",
+			get: vi.fn().mockReturnValue("request-amount"),
+		}
+
+		// zod strict-less schema ignores unknown keys — ensure the service
+		// is still called without an `amount` field
+		await invokeController(
+			initializePayment,
+			request,
+			createControllerTestResponse()
+		)
+
+		const call = mockInitializePaymentIdempotently.mock.calls[0]?.[0] as
+			| Record<string, unknown>
+			| undefined
+		expect(call).toBeDefined()
+		expect(call).not.toHaveProperty("amount")
+		expect(call).not.toHaveProperty("currency")
+	})
+
+	it("rejects when orderId is missing", async () => {
+		const request: ControllerTestRequest<{ provider: "paystack" }> = {
+			body: { provider: "paystack" },
+			userId: "user-1",
+			get: vi.fn().mockReturnValue("request-no-order"),
+		}
+
+		await expect(
+			invokeController(
+				initializePayment,
+				request,
+				createControllerTestResponse()
+			)
+		).rejects.toBeTruthy()
+
+		expect(mockInitializePaymentIdempotently).not.toHaveBeenCalled()
 	})
 })

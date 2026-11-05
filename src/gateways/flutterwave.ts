@@ -7,6 +7,8 @@ import type {
 	InitializePaymentResult,
 	NormalizedPaymentStatus,
 	PaymentGateway,
+	RefundInput,
+	RefundResult,
 	VerifyPaymentResult,
 	WebhookEvent,
 	WebhookHeaders,
@@ -125,6 +127,28 @@ export const createFlutterwaveGateway = (
 				amount: Math.round(data.amount * 100),
 				currency: data.currency,
 				providerReference: data.flw_ref ?? String(data.id),
+				raw: data,
+			}
+		},
+
+		async refundPayment(input: RefundInput): Promise<RefundResult> {
+			const txId = input.providerReference
+			if (!txId) {
+				throw new AppError(
+					422,
+					"Flutterwave transaction id required for refund"
+				)
+			}
+			const majorAmount = input.amount / 100
+			const { data } = await call<{ id: number; status: string }>(
+				`/transactions/${encodeURIComponent(txId)}/refund`,
+				{
+					method: "POST",
+					data: { amount: majorAmount, comments: input.reason },
+				}
+			)
+			return {
+				providerReference: String(data.id),
 				raw: data,
 			}
 		},

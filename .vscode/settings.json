@@ -1,0 +1,43 @@
+{
+	"typescript.tsserver.maxTsServerMemory": 2048,
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.tsserver.watchOptions": {
+		"watchFile": "useFsEventsOnParentDirectory",
+		"watchDirectory": "useFsEvents",
+		"fallbackPolling": "dynamicPriority"
+	},
+	"files.watcherExclude": {
+		"**/node_modules/**": true,
+		"**/dist/**": true,
+		"**/build/**": true,
+		"**/out/**": true,
+		"**/coverage/**": true,
+		"**/.git/objects/**": true,
+		"**/.git/subtree-cache/**": true,
+		"**/logs/**": true,
+		"**/uploads/**": true,
+		"**/src/storage/**": true,
+		"**/prisma/*.db": true,
+		"**/prisma/*.db-journal": true,
+		"**/dump.rdb": true
+	},
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/dist": true,
+		"**/build": true,
+		"**/out": true,
+		"**/coverage": true,
+		"**/logs": true,
+		"**/uploads": true,
+		"**/src/storage": true,
+		"**/package-lock.json": true,
+		"**/dump.rdb": true,
+		"**/*.log": true
+	},
+	"files.exclude": {
+		"**/.git": true,
+		"**/node_modules": true,
+		"**/dist": true,
+		"**/coverage": true
+	}
+}

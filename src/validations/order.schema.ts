@@ -7,7 +7,7 @@ export const indexOrderSchema = urlQuerySchema.extend({
 })
 
 export const orderSchema = z.object({
-	id: z.cuid2(),
+	id: z.uuid(),
 })
 
 export const updateOrderschema = z.object({

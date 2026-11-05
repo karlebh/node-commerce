@@ -32,6 +32,7 @@ const envSchema = z.object({
 	FRONTEND_URL: z.string().url().default("http://localhost:5173"),
 	APP_URL: z.string().url().optional(),
 	APP_NAME: z.string(),
+	UPLOAD_DIR: z.string().min(1).default("./uploads"),
 	MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(50),
 	OAUTH_SESSION: boolString.default(false),
 	PAYSTACK_SECRET_KEY: optionalSecret,
@@ -43,6 +44,18 @@ const envSchema = z.object({
 		.string()
 		.url()
 		.default("http://localhost:5173/payments/callback"),
+	DEFAULT_CURRENCY: z.string().length(3).default("NGN"),
+	PAYMENT_RECONCILE_CHECK_AFTER_MS: z.coerce
+		.number()
+		.int()
+		.positive()
+		.default(5 * 60 * 1000),
+	PAYMENT_RECONCILE_ABANDON_AFTER_MS: z.coerce
+		.number()
+		.int()
+		.positive()
+		.default(60 * 60 * 1000),
+	PAYMENT_RECONCILE_CRON: z.string().default("*/5 * * * *"),
 })
 
 export const env = envSchema.parse(process.env)

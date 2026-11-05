@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String    @id @default(uuid())
   username     String    @unique
   email        String    @unique
   passwordHash String?
@@ -31,7 +31,7 @@ model User {
 }
 
 model Product {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   name        String
   slug        String    @unique
   description String
@@ -58,7 +58,7 @@ model Product {
 }
 
 model Category {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid())
   name      String    @unique
   slug      String    @unique
   products  Product[]
@@ -70,7 +70,7 @@ model Category {
 }
 
 model Session {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid())
   userId    String
   expiresAt DateTime
   revokedAt DateTime?
@@ -84,7 +84,7 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid())
   email     String
   tokenHash String
   expiresAt DateTime
@@ -102,7 +102,7 @@ enum ImageableType {
 }
 
 model Image {
-  id            String        @id @default(cuid())
+  id            String        @id @default(uuid())
   userId        String
   url           String
   imageableId   String
@@ -119,7 +119,7 @@ model Image {
 }
 
 model Cart {
-  id        String    @id @default(cuid(2))
+  id        String    @id @default(uuid())
   userId    String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -132,7 +132,7 @@ model Cart {
 }
 
 model CartItem {
-  id        String    @id @default(cuid(2))
+  id        String    @id @default(uuid())
   cartId    String
   productId String
   quantity  Int       @default(0)
@@ -154,7 +154,7 @@ enum LikeableType {
 }
 
 model Like {
-  id           String       @id @default(cuid(2))
+  id           String       @id @default(uuid())
   userId       String       
   likeableId   String
   likeableType LikeableType
@@ -179,7 +179,7 @@ enum OrderStatus {
 }
 
 model Order {
-  id        String      @id @default(cuid(2))
+  id        String      @id @default(uuid())
   userId    String
   status    OrderStatus @default(PENDING)
   total     Int
@@ -197,7 +197,7 @@ model Order {
 }
 
 model OrderItem {
-  id          String    @id @default(cuid(2))
+  id          String    @id @default(uuid())
   orderId     String
   productId   String
   productName String
@@ -216,7 +216,7 @@ model OrderItem {
 }
 
 model Review {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(uuid())
   userId             String
   productId          String
   rating             Int      @db.SmallInt
@@ -246,7 +246,7 @@ enum OauthProviders {
 }
 
 model OAuthAccount {
-  id   String @id @default(cuid(2))
+  id   String @id @default(uuid())
   provider OauthProviders
   providerAccountId  String
   userId String
@@ -267,7 +267,7 @@ enum IdempotencyStatus {
 }
 
 model IdempotencyKey {
-  id             String           @id @default(cuid(2))
+  id             String           @id @default(uuid())
   key            String
   userId         String
   requestHash    String
@@ -296,10 +296,23 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   ABANDONED
+  REFUNDED
+}
+
+enum LedgerEntryType {
+  PAYMENT
+  REFUND
+  CHARGEBACK
+  ADJUSTMENT
+}
+
+enum LedgerDirection {
+  CREDIT
+  DEBIT
 }
 
 model Payment {
-  id                String          @id @default(cuid(2))
+  id                String          @id @default(uuid())
   userId            String
   orderId           String?
   provider          PaymentProvider
@@ -324,7 +337,7 @@ model Payment {
 }
 
 model PaymentWebhookEvent {
-  id          String          @id @default(cuid(2))
+  id          String          @id @default(uuid())
   provider    PaymentProvider
   eventId     String
   payload     Json
@@ -334,8 +347,29 @@ model PaymentWebhookEvent {
   @@map("payment_webhook_events")
 }
 
+model LedgerEntry {
+  id          String          @id @default(uuid())
+  userId      String?
+  paymentId   String?
+  orderId     String?
+  type        LedgerEntryType
+  direction   LedgerDirection
+  amount      Int
+  currency    String          @default("NGN")
+  reference   String
+  description String?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+
+  @@unique([type, reference])
+  @@index([userId])
+  @@index([paymentId])
+  @@index([orderId])
+  @@map("ledger_entries")
+}
+
 model Task {
-  id String @id @default(cuid(2))
+  id String @id @default(uuid())
   userId String
   title String 
   body String @db.Text 

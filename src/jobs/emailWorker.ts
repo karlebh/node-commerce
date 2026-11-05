@@ -41,7 +41,3 @@ emailWorker.on("failed", (job, error) => {
 emailWorker.on("completed", (job) => {
 	console.info(`Email job ${job.name} (${job.id}) completed`)
 })
-
-emailWorker.on("completed", (job) => {
-	console.info(`Email job ${job.name} (${job.id}) completed`)
-})

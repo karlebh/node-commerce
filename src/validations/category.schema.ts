@@ -8,7 +8,7 @@ export const createCategorySchema = z.object({
 export const updateCategorySchema = createCategorySchema.partial()
 
 export const categoryParamsSchema = z.object({
-	id: z.cuid2(),
+	id: z.uuid(),
 })
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>
