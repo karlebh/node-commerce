@@ -68,9 +68,7 @@ export const show: AuthenticatedHandler = async (
 
 	if (!order) throw new AppError(404, "Order not found")
 
-	return response
-		.status(200)
-		.json({ message: "Order fetched successfully", order })
+	return response.status(200).json({ order })
 }
 
 export const store: AuthenticatedHandler = async (
@@ -102,9 +100,7 @@ export const update: AuthenticatedHandler = async (
 
 	if (!order) throw new AppError(404, "Order not found")
 
-	return response
-		.status(200)
-		.json({ message: "Order updated successfully", order })
+	return response.status(200).json({ order })
 }
 
 export const destroy: AuthenticatedHandler = async (
@@ -117,5 +113,5 @@ export const destroy: AuthenticatedHandler = async (
 		where: { id, userId: request.userId },
 	})
 
-	return response.status(200).json({ message: "Order deleted successfully" })
+	return response.status(204).send()
 }

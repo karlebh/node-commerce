@@ -135,9 +135,7 @@ describe("Category Controller", () => {
 			expect(mockPrisma.category.create).toHaveBeenCalledWith({
 				data: expect.objectContaining({
 					name: "Running Shoes",
-					slug: expect.stringMatching(
-						/^running-shoes-[0-9a-f-]{36}$/
-					),
+					slug: "running-shoes",
 				}),
 			})
 			expect(response.status).toHaveBeenCalledWith(201)

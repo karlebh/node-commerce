@@ -9,6 +9,14 @@ export type EmailJobs = {
 		name: string
 		appName: string
 	}
+	newsletter: {
+		email: string
+		name: string
+		subject: string
+		template: string
+		unsubscribeUrl: string
+		body?: string
+	}
 }
 
 export const emailQueue = new Queue("email", {

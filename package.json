@@ -4,7 +4,8 @@
 	"description": "A production-minded ecommerce API for learning Node.js with Laravel-inspired structure",
 	"main": "dist/index.js",
 	"scripts": {
-		"dev": "tsx watch src/index.ts",
+		"dev": "concurrently -n api,worker -c blue,magenta --kill-others-on-fail \"tsx watch src/index.ts\" \"tsx watch src/jobs/scheduler.ts\"",
+		"dev:api": "tsx watch src/index.ts",
 		"worker": "tsx src/jobs/scheduler.ts",
 		"cli": "tsx src/cli.ts",
 		"cli:build": "tsc && node dist/cli.js",
@@ -73,6 +74,7 @@
 		"@types/passport-google-oauth20": "^2.0.17",
 		"@types/pg": "^8.23.1",
 		"@types/supertest": "^6.0.3",
+		"concurrently": "^10.0.6",
 		"jest": "^30.5.2",
 		"prisma": "^7.10.0",
 		"supertest": "^7.2.2",

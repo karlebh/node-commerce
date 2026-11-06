@@ -12,6 +12,8 @@ import * as notificationController from "../controllers/notification.controller.
 import * as paymentController from "../controllers/payment.controller.js"
 import * as reviewController from "../controllers/review.controller.js"
 import * as TaskController from "../controllers/task.controllers.js"
+import * as unsubscribeController from "../controllers/unsubscribe.controller.js"
+import * as userController from "../controllers/user.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
@@ -122,7 +124,7 @@ orderRouter.post(
 	"/",
 	protectedHandler(orderController.store, requiresOwnership(prisma.order))
 )
-orderRouter.put(
+orderRouter.patch(
 	"/:id",
 	protectedHandler(orderController.update, requiresOwnership(prisma.order))
 )
@@ -162,3 +164,17 @@ reviewRouter.delete("/:id", protectedHandler(reviewController.destroy))
 
 export const taskRouter = Router()
 taskRouter.get("/", protectedHandler(TaskController.index))
+
+export const userRouter = Router()
+userRouter.get("/", protectedHandler(userController.index))
+userRouter.get("/:id", protectedHandler(userController.show))
+
+export const unsubscribeRouter = Router()
+unsubscribeRouter.get(
+	"/:token",
+	asyncHandler(unsubscribeController.unsubscribe)
+)
+unsubscribeRouter.post(
+	"/:token",
+	asyncHandler(unsubscribeController.unsubscribeOneClick)
+)

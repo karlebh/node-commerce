@@ -2,13 +2,12 @@ import { env } from "../configs/env.js"
 import { prisma } from "../database/prisma.js"
 import jwt from "jsonwebtoken"
 
-export const createSlug = (name: string): string => {
-	return `${name
+export const createSlug = (name: string): string =>
+	name
 		.toLowerCase()
 		.trim()
 		.replace(/\s+/g, "-")
-		.replace(/[^\w-]/g, "")}-${crypto.randomUUID()}`
-}
+		.replace(/[^\w-]/g, "")
 
 type PublicUser = {
 	id: string

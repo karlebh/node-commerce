@@ -66,3 +66,45 @@ export async function sendResetPasswordSuccessEmail(
 		html: resetPasswordSuccessTemplate({ username, appName }),
 	})
 }
+
+const newsletterTemplateCache = new Map<string, Handlebars.TemplateDelegate>()
+
+const loadNewsletterTemplate = (
+	name: string
+): Handlebars.TemplateDelegate => {
+	const cached = newsletterTemplateCache.get(name)
+	if (cached) return cached
+	const source = fs.readFileSync(
+		path.join(__dirname, "templates", "newsletters", `${name}.hbs`),
+		"utf8"
+	)
+	const compiled = Handlebars.compile(source)
+	newsletterTemplateCache.set(name, compiled)
+	return compiled
+}
+
+export async function sendNewsletterEmail(args: {
+	email: string
+	name: string
+	subject: string
+	template: string
+	unsubscribeUrl: string
+	body?: string
+}): Promise<void> {
+	const render = loadNewsletterTemplate(args.template)
+	await transporter.sendMail({
+		from: process.env.MAIL_FROM,
+		to: args.email,
+		subject: args.subject,
+		html: render({
+			name: args.name,
+			appName: env.APP_NAME,
+			unsubscribeUrl: args.unsubscribeUrl,
+			body: args.body ?? "",
+		}),
+		headers: {
+			"List-Unsubscribe": `<${args.unsubscribeUrl}>`,
+			"List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+		},
+	})
+}

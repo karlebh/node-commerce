@@ -1,5 +1,5 @@
 import type { Request, RequestHandler, Response } from "express"
-import type { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
 import {
@@ -88,8 +88,18 @@ export const store: AuthenticatedHandler = async (
 		category: { connect: { id: categoryId } },
 	}
 
-	const product = await prisma.product.create({ data })
-	response.status(201).json({ data: product })
+	try {
+		const product = await prisma.product.create({ data })
+		response.status(201).json({ data: product })
+	} catch (error) {
+		if (
+			error instanceof Prisma.PrismaClientKnownRequestError &&
+			error.code === "P2002"
+		) {
+			throw new AppError(409, "A product with this name already exists")
+		}
+		throw error
+	}
 }
 
 export const update: RequestHandler = async (
@@ -107,12 +117,21 @@ export const update: RequestHandler = async (
 		data.slug = createSlug(data.name)
 	}
 
-	const product = await prisma.product.update({
-		where: { id },
-		data,
-	})
-
-	return response.status(200).json({ data: product })
+	try {
+		const product = await prisma.product.update({
+			where: { id },
+			data,
+		})
+		return response.status(200).json({ data: product })
+	} catch (error) {
+		if (
+			error instanceof Prisma.PrismaClientKnownRequestError &&
+			error.code === "P2002"
+		) {
+			throw new AppError(409, "A product with this name already exists")
+		}
+		throw error
+	}
 }
 
 export const destroy: RequestHandler = async (
@@ -125,5 +144,5 @@ export const destroy: RequestHandler = async (
 		where: { id },
 	})
 
-	return response.status(200).json({ message: "Product deleted succesfully" })
+	return response.status(204).send()
 }

@@ -18,21 +18,16 @@ import {
 const prismaMock = prisma as unknown as PrismaMock
 
 describe("createSlug", () => {
-	it("lowercases, trims, replaces spaces, appends a UUID", () => {
-		const slug = createSlug("  Hello World  ")
-		expect(slug.startsWith("hello-world-")).toBe(true)
-		expect(slug).toMatch(/^hello-world-[0-9a-f-]{36}$/)
+	it("lowercases, trims, replaces spaces", () => {
+		expect(createSlug("  Hello World  ")).toBe("hello-world")
 	})
 
 	it("strips non-word characters", () => {
-		const slug = createSlug("Fancy!@# Pants$%^")
-		expect(slug).toMatch(/^fancy-pants-[0-9a-f-]{36}$/)
+		expect(createSlug("Fancy!@# Pants$%^")).toBe("fancy-pants")
 	})
 
-	it("produces different suffixes each call", () => {
-		const a = createSlug("same")
-		const b = createSlug("same")
-		expect(a).not.toBe(b)
+	it("is deterministic for the same input", () => {
+		expect(createSlug("same")).toBe(createSlug("same"))
 	})
 })
 

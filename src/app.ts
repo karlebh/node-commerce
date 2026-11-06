@@ -19,6 +19,8 @@ import {
 	productRouter,
 	reviewRouter,
 	taskRouter,
+	unsubscribeRouter,
+	userRouter,
 } from "./routes/api.js"
 import { UPLOAD_DIR } from "./configs/multer.js"
 import { registerPaymentWebhookObservers } from "./webhooks/payment.webhooks.js"
@@ -50,5 +52,7 @@ app.use("/api/orders", orderRouter)
 app.use("/api/payments", paymentRouter)
 app.use("/api/reviews", reviewRouter)
 app.use("/api/tasks", taskRouter)
+app.use("/api/users", userRouter)
+app.use("/api/unsubscribe", unsubscribeRouter)
 app.use(notFound)
 app.use(errorHandler)

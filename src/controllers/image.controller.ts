@@ -75,9 +75,7 @@ export const store: AuthenticatedHandler = async (
 			return { ...created, owner }
 		})
 
-		return response
-			.status(201)
-			.json({ message: "Image upload successful", data: { image } })
+		return response.status(201).json({ data: { image } })
 	} catch (err) {
 		await removeFile(file.path).catch(() => undefined)
 		throw err
@@ -100,5 +98,5 @@ export const destroy: AuthenticatedHandler = async (
 
 	await removeFile(path.join(UPLOAD_DIR, path.basename(image.url)))
 
-	return response.status(200).json({ message: "Image deleted successfully" })
+	return response.status(204).send()
 }

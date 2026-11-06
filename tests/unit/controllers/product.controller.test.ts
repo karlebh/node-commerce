@@ -180,9 +180,7 @@ describe("Product Controller", () => {
 		expect(mockPrisma.product.create).toHaveBeenCalledWith({
 			data: expect.objectContaining({
 				name: "Air Max 270",
-				slug: expect.stringMatching(
-					/^air-max-270-[0-9a-f-]{36}$/
-				),
+				slug: "air-max-270",
 				description: "A lightweight everyday sneaker.",
 				price: 1999,
 				stock: 10,
@@ -212,9 +210,7 @@ describe("Product Controller", () => {
 			data: {
 				name: "Updated Name",
 				price: 2500,
-				slug: expect.stringMatching(
-					/^updated-name-[0-9a-f-]{36}$/
-				),
+				slug: "updated-name",
 			},
 		})
 		expect(response.status).toHaveBeenCalledWith(200)
@@ -233,9 +229,7 @@ describe("Product Controller", () => {
 		expect(mockPrisma.product.delete).toHaveBeenCalledWith({
 			where: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
 		})
-		expect(response.status).toHaveBeenCalledWith(200)
-		expect(response.json).toHaveBeenCalledWith({
-			message: "Product deleted succesfully",
-		})
+		expect(response.status).toHaveBeenCalledWith(204)
+		expect(response.send).toHaveBeenCalled()
 	})
 })

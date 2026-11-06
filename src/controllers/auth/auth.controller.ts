@@ -57,7 +57,6 @@ export const login: RequestHandler = async (
 	const token = await createSessionAndToken(user.id)
 
 	return response.status(200).json({
-		message: "Login successful",
 		data: { user: publicUser(user), token },
 	})
 }
@@ -73,7 +72,7 @@ export const logout: AuthenticatedHandler = async (
 		data: { revokedAt: new Date() },
 	})
 
-	return response.status(200).json({ message: "Logout successful" })
+	return response.status(204).send()
 }
 
 export const me: AuthenticatedHandler = async (

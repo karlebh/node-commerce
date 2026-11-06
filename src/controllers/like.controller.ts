@@ -41,9 +41,7 @@ export const like: AuthenticatedHandler = async (
 		return { ...created, owner }
 	})
 
-	return response
-		.status(201)
-		.json({ message: "Like created successfully", like })
+	return response.status(201).json({ like })
 }
 
 export const unlike: RequestHandler = async (
@@ -56,7 +54,5 @@ export const unlike: RequestHandler = async (
 		where: { id: likeId },
 	})
 
-	return response.status(200).json({
-		message: "Like deleted successfully",
-	})
+	return response.status(204).send()
 }

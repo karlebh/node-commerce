@@ -1,5 +1,6 @@
 import { Worker } from "bullmq"
 import {
+	sendNewsletterEmail,
 	sendPasswordResetEmail,
 	sendRegisterEmail,
 	sendResetPasswordSuccessEmail,
@@ -25,6 +26,10 @@ export const emailWorker = new Worker(
 				const { email, name, appName } =
 					job.data as EmailJobs["password-reset-success"]
 				await sendResetPasswordSuccessEmail(email, name, appName)
+				break
+			}
+			case "newsletter": {
+				await sendNewsletterEmail(job.data as EmailJobs["newsletter"])
 				break
 			}
 			default:

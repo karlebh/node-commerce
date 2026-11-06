@@ -8,31 +8,34 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  username     String    @unique
-  email        String    @unique
-  passwordHash String?
-  products     Product[]
-  session      Session[]
-  oauthAccounts OAuthAccount[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
-  images       Image[]
-  likes        Like[]
-  cart         Cart?
-  orders       Order[]
-   review      Review[]
-  idempotencyKeys IdempotencyKey[]
-  payments     Payment[]
-  tasks Task[]
+  id               String    @id @default(uuid())
+  username         String    @unique
+  email            String    @unique
+  passwordHash     String?
+  unsubscribedAt   DateTime?
+  unsubscribeToken String    @unique @default(dbgenerated("gen_random_uuid()::text"))
+  products         Product[]
+  session          Session[]
+  oauthAccounts    OAuthAccount[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  images           Image[]
+  likes            Like[]
+  cart             Cart?
+  orders           Order[]
+  review           Review[]
+  idempotencyKeys  IdempotencyKey[]
+  payments         Payment[]
+  tasks            Task[]
+  newsletterSends  NewsletterSend[]
 
   @@map("users")
 }
 
 model Product {
   id          String    @id @default(uuid())
-  name        String
+  name        String    @unique
   slug        String    @unique
   description String
   price       Int
@@ -371,11 +374,38 @@ model LedgerEntry {
 model Task {
   id String @id @default(uuid())
   userId String
-  title String 
-  body String @db.Text 
+  title String
+  body String @db.Text
   createdAt DateTime @default(now())
 
 user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([title])
   @@map("tasks")
+}
+
+model Newsletter {
+  id        String    @id @default(uuid())
+  slug      String    @unique
+  subject   String
+  template  String
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  sends NewsletterSend[]
+
+  @@map("newsletters")
+}
+
+model NewsletterSend {
+  id           String   @id @default(uuid())
+  newsletterId String
+  userId       String
+  sentAt       DateTime @default(now())
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([newsletterId, userId])
+  @@index([userId])
+  @@map("newsletter_sends")
 }

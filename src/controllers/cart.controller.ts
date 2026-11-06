@@ -71,9 +71,7 @@ export const addItem: AuthenticatedHandler = async (
 		if (!created) throw new AppError(500, "Error adding item to cart")
 	})
 
-	return response
-		.status(201)
-		.json({ message: "Item added to cart succesfully" })
+	return response.status(204).send()
 }
 
 export const removeIteam: AuthenticatedHandler = async (
@@ -86,9 +84,7 @@ export const removeIteam: AuthenticatedHandler = async (
 
 	if (!deleted) throw new AppError(500, "Error deleting cart itme")
 
-	return response
-		.status(200)
-		.json({ message: "Deleted cart item successfully" })
+	return response.status(204).send()
 }
 
 export const clearCart: AuthenticatedHandler = async (
@@ -101,5 +97,5 @@ export const clearCart: AuthenticatedHandler = async (
 
 	if (!items) throw new AppError(500, "Error clearing cart")
 
-	return response.status(200).json({ message: "Cart cleared succesfully" })
+	return response.status(204).send()
 }

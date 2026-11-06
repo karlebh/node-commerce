@@ -46,9 +46,7 @@ export const change: AuthenticatedHandler = async (request: AuthenticatedRequest
 		data: { passwordHash },
 	})
 
-	return response.status(200).json({
-		message: "Password updated successfully",
-	})
+	return response.status(204).send()
 }
 
 export const reset: RequestHandler = async (request: Request, response: Response) => {
@@ -79,10 +77,7 @@ export const reset: RequestHandler = async (request: Request, response: Response
 		await addEmailJob("password-reset", { email: user.email, token })
 	}
 
-	response.status(200).json({
-		message:
-			"If an account with that email exists, a reset link has been sent.",
-	})
+	response.status(204).send()
 }
 
 export const confirmReset: RequestHandler = async (request: Request, response: Response) => {
@@ -119,5 +114,5 @@ export const confirmReset: RequestHandler = async (request: Request, response: R
 		appName: env.APP_NAME,
 	})
 
-	return response.status(200).json({ message: "Passord reset successfully" })
+	return response.status(204).send()
 }
