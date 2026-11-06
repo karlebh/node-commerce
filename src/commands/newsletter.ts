@@ -21,8 +21,8 @@ type Args = {
 	slug: string
 	subject: string
 	template: string
-	body?: string
-	bodyFile?: string
+	body: string | undefined
+	bodyFile: string | undefined
 	batchSize: number
 }
 

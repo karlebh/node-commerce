@@ -78,7 +78,8 @@ describe("User Controller", () => {
 				})
 			)
 			expect(response.status).toHaveBeenCalledWith(200)
-			const [[payload]] = (response.json as ReturnType<typeof vi.fn>).mock.calls
+			const payload = (response.json as ReturnType<typeof vi.fn>).mock
+				.calls[0]![0]
 			expect(payload.total).toBe(2)
 			expect(payload.data).toHaveLength(2)
 			expect(payload.data[0]).toEqual({

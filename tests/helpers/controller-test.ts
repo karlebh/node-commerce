@@ -1,7 +1,13 @@
-import type { Request, RequestHandler, Response } from "express"
+import type { NextFunction, Request, Response } from "express"
 import type { ParamsDictionary } from "express-serve-static-core"
 import type { ParsedQs } from "qs"
 import { vi } from "vitest"
+
+type AnyHandler = (
+	req: any,
+	res: Response,
+	next: NextFunction
+) => unknown
 
 export type ControllerTestRequest<Body = unknown> = {
 	body: Body
@@ -36,12 +42,12 @@ export const createControllerTestResponse = (): ControllerTestResponse => {
 }
 
 export const invokeController = <Body>(
-	handler: RequestHandler,
+	handler: AnyHandler,
 	request: ControllerTestRequest<Body>,
 	response: ControllerTestResponse
 ) =>
 	handler(
-		request as Request<ParamsDictionary, unknown, Body>,
+		request as unknown as Request<ParamsDictionary, unknown, Body>,
 		response,
 		vi.fn()
 	)

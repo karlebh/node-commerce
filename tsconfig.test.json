@@ -2,7 +2,9 @@
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"rootDir": ".",
+		"target": "es2022",
 		"noEmit": true,
+		"exactOptionalPropertyTypes": false,
 		"types": ["node", "vitest/globals"]
 	},
 	"include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],
