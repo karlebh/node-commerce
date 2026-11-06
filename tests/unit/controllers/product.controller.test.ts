@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { Request } from "express"
+import { Prisma } from "@prisma/client"
 import {
 	createControllerTestResponse,
 	invokeController,
@@ -215,6 +216,49 @@ describe("Product Controller", () => {
 		})
 		expect(response.status).toHaveBeenCalledWith(200)
 		expect(response.json).toHaveBeenCalledWith({ data: updated })
+	})
+
+	it("409s when creating a product with a duplicate name", async () => {
+		mockPrisma.category.findUnique.mockResolvedValue({ id: "cat-123" })
+		mockPrisma.product.create.mockRejectedValue(
+			new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+				code: "P2002",
+				clientVersion: "test",
+			})
+		)
+
+		const request: ControllerTestRequest<CreateProductBody> = {
+			userId: "user-123",
+			body: {
+				name: "Air Max 270",
+				description: "A lightweight everyday sneaker.",
+				price: 1999,
+				stock: 10,
+				categoryId: "cat-123",
+			},
+		}
+
+		await expect(
+			invokeController(store, request, createControllerTestResponse())
+		).rejects.toMatchObject({ statusCode: 409 })
+	})
+
+	it("409s when updating to a duplicate name", async () => {
+		mockPrisma.product.update.mockRejectedValue(
+			new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+				code: "P2002",
+				clientVersion: "test",
+			})
+		)
+
+		const request: ControllerTestRequest<UpdateProductBody> = {
+			params: { id: "f47ac10b-58cc-4372-a567-0e02b2c3d479" },
+			body: { name: "Already Taken" },
+		}
+
+		await expect(
+			invokeController(update, request, createControllerTestResponse())
+		).rejects.toMatchObject({ statusCode: 409 })
 	})
 
 	it("deletes a product by ID", async () => {
