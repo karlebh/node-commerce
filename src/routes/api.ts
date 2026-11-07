@@ -14,6 +14,7 @@ import * as reviewController from "../controllers/review.controller.js"
 import * as TaskController from "../controllers/task.controllers.js"
 import * as unsubscribeController from "../controllers/unsubscribe.controller.js"
 import * as userController from "../controllers/user.controller.js"
+import * as videoController from "../controllers/video.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
@@ -93,6 +94,13 @@ imageRouter.delete(
 	protectedHandler(imageController.destroy, requiresOwnership(prisma.image))
 )
 
+export const videoRouter = Router()
+videoRouter.post("/", protectedHandler(videoController.store))
+videoRouter.delete(
+	"/:id",
+	protectedHandler(videoController.destroy, requiresOwnership(prisma.video))
+)
+
 export const cartRouter = Router()
 cartRouter.get(
 	"/",
@@ -168,6 +176,21 @@ taskRouter.get("/", protectedHandler(TaskController.index))
 export const userRouter = Router()
 userRouter.get("/", protectedHandler(userController.index))
 userRouter.get("/:id", protectedHandler(userController.show))
+
+export const notificationRouter = Router()
+notificationRouter.get("/", protectedHandler(notificationController.index))
+notificationRouter.post(
+	"/read-all",
+	protectedHandler(notificationController.markAllRead)
+)
+notificationRouter.patch(
+	"/:id/read",
+	protectedHandler(notificationController.markRead)
+)
+notificationRouter.delete(
+	"/:id",
+	protectedHandler(notificationController.destroy)
+)
 
 export const unsubscribeRouter = Router()
 unsubscribeRouter.get(

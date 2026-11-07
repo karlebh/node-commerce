@@ -237,7 +237,7 @@ describe("POST /api/auth/logout (protected)", () => {
 			.post("/api/auth/logout")
 			.set("Authorization", `Bearer ${token}`)
 
-		expect(res.status).toBe(200)
+		expect(res.status).toBe(204)
 		expect(mockPrisma.session.update).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: { id: "s1" },

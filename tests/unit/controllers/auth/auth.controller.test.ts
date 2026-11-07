@@ -206,7 +206,6 @@ describe("Auth Controller", () => {
 			expect(response.status).toHaveBeenCalledWith(200)
 
 			expect(response.json).toHaveBeenCalledWith({
-				message: "Login successful",
 				data: {
 					user: publicUser,
 					token: "jwt-token",
@@ -286,11 +285,8 @@ describe("Auth Controller", () => {
 				},
 			})
 
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message: "Logout successful",
-			})
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 
 	})

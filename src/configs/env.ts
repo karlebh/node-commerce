@@ -34,6 +34,7 @@ const envSchema = z.object({
 	APP_NAME: z.string(),
 	UPLOAD_DIR: z.string().min(1).default("./uploads"),
 	MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(50),
+	MAX_VIDEO_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(500),
 	OAUTH_SESSION: boolString.default(false),
 	PAYSTACK_SECRET_KEY: optionalSecret,
 	FLUTTERWAVE_SECRET_KEY: optionalSecret,

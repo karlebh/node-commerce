@@ -21,6 +21,8 @@ model User {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
   images           Image[]
+  videos           Video[]
+  notifications    Notification[]
   likes            Like[]
   cart             Cart?
   orders           Order[]
@@ -408,4 +410,58 @@ model NewsletterSend {
   @@unique([newsletterId, userId])
   @@index([userId])
   @@map("newsletter_sends")
+}
+
+enum VideoableType {
+  POST
+  PRODUCT
+  CATEGORY
+}
+
+model Video {
+  id            String        @id @default(uuid())
+  userId        String
+  url           String
+  mimeType      String
+  durationMs    Int?
+  videoableId   String
+  videoableType VideoableType
+  size          Int
+  createdAt     DateTime      @default(now())
+  deletedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([videoableType, videoableId, userId])
+  @@unique([videoableType, videoableId, userId])
+  @@map("videos")
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  PAYMENT_REFUNDED
+  REVIEW_RECEIVED
+  GENERIC
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?          @db.Text
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notifications")
 }

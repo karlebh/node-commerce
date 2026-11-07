@@ -2,7 +2,10 @@ import multer from "multer"
 import path from "path"
 import fs from "fs"
 import { env } from "./env.js"
-import { ALLOWED_IMAGE_TYPES } from "../validations/media.schema.js"
+import {
+	ALLOWED_IMAGE_TYPES,
+	ALLOWED_VIDEO_TYPES,
+} from "../validations/media.schema.js"
 
 export const UPLOAD_DIR = path.resolve(env.UPLOAD_DIR)
 
@@ -29,6 +32,18 @@ export const uploader = multer({
 	limits: { fileSize: env.MAX_UPLOAD_SIZE_MB * 1024 * 1024 },
 	fileFilter: (_req, file, cb) => {
 		if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+			cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname))
+			return
+		}
+		cb(null, true)
+	},
+})
+
+export const videoUploader = multer({
+	storage,
+	limits: { fileSize: env.MAX_VIDEO_UPLOAD_SIZE_MB * 1024 * 1024 },
+	fileFilter: (_req, file, cb) => {
+		if (!(ALLOWED_VIDEO_TYPES as readonly string[]).includes(file.mimetype)) {
 			cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname))
 			return
 		}

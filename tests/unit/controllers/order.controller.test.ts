@@ -228,7 +228,8 @@ describe("Order Controller", () => {
 			expect(mockPrisma.order.delete).toHaveBeenCalledWith({
 				where: { id: VALID_UUID, userId: "user-1" },
 			})
-			expect(response.status).toHaveBeenCalledWith(200)
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 	})
 })

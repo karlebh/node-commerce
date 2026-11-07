@@ -155,7 +155,8 @@ describe("Cart Controller", () => {
 				},
 				update: { quantity: 3 },
 			})
-			expect(response.status).toHaveBeenCalledWith(201)
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 
 		it("throws when the product does not exist", async () => {
@@ -194,7 +195,8 @@ describe("Cart Controller", () => {
 			expect(mockPrisma.cartItem.delete).toHaveBeenCalledWith({
 				where: { id: VALID_UUID },
 			})
-			expect(response.status).toHaveBeenCalledWith(200)
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 	})
 
@@ -212,7 +214,8 @@ describe("Cart Controller", () => {
 			expect(mockPrisma.cartItem.deleteMany).toHaveBeenCalledWith({
 				where: { cart: { userId: "user-1" } },
 			})
-			expect(response.status).toHaveBeenCalledWith(200)
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 	})
 })

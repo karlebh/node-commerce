@@ -127,11 +127,8 @@ describe("Password Controller", () => {
 				data: { passwordHash: "new-hash" },
 			})
 
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message: "Password updated successfully",
-			})
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 
 		it("throws when the user does not exist", async () => {
@@ -236,12 +233,8 @@ describe("Password Controller", () => {
 				})
 			)
 
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message:
-					"If an account with that email exists, a reset link has been sent.",
-			})
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 
 		it("does not reveal whether the email exists", async () => {
@@ -260,12 +253,8 @@ describe("Password Controller", () => {
 			expect(mockPrisma.$transaction).not.toHaveBeenCalled()
 			expect(mockAddEmailJob).not.toHaveBeenCalled()
 
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message:
-					"If an account with that email exists, a reset link has been sent.",
-			})
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 	})
 
@@ -342,11 +331,8 @@ describe("Password Controller", () => {
 				}
 			)
 
-			expect(response.status).toHaveBeenCalledWith(200)
-
-			expect(response.json).toHaveBeenCalledWith({
-				message: "Passord reset successfully",
-			})
+			expect(response.status).toHaveBeenCalledWith(204)
+			expect(response.send).toHaveBeenCalled()
 		})
 
 		it("rejects an invalid or expired reset token", async () => {
