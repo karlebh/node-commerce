@@ -48,4 +48,9 @@ vi.mock("../src/configs/multer.js", () => ({
 			(_req: unknown, _res: unknown, next: (err?: unknown) => void) =>
 				next(),
 	},
+	videoUploader: {
+		single: () =>
+			(_req: unknown, _res: unknown, next: (err?: unknown) => void) =>
+				next(),
+	},
 }))
