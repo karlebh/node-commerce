@@ -103,7 +103,7 @@ describe("resolvePolymorphic", () => {
 		prismaMock.user.findUnique.mockResolvedValueOnce({ id: "u1" })
 		const result = await resolvePolymorphic(
 			prismaMock as unknown as Parameters<typeof resolvePolymorphic>[0],
-			"User",
+			"USER",
 			"u1"
 		)
 		expect(result).toEqual({ id: "u1" })
@@ -117,7 +117,7 @@ describe("resolvePolymorphic", () => {
 		prismaMock.product.findUnique.mockResolvedValueOnce({ id: "p1" })
 		const result = await resolvePolymorphic(
 			prismaMock as unknown as Parameters<typeof resolvePolymorphic>[0],
-			"Product",
+			"PRODUCT",
 			"p1"
 		)
 		expect(result).toEqual({ id: "p1" })
@@ -127,7 +127,7 @@ describe("resolvePolymorphic", () => {
 		prismaMock.category.findUnique.mockResolvedValueOnce({ id: "c1" })
 		const result = await resolvePolymorphic(
 			prismaMock as unknown as Parameters<typeof resolvePolymorphic>[0],
-			"Category",
+			"CATEGORY",
 			"c1"
 		)
 		expect(result).toEqual({ id: "c1" })

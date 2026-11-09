@@ -12,13 +12,18 @@ import {
 	authRouter,
 	cartRouter,
 	categoryRouter,
+	discountRouter,
 	imageRouter,
 	orderRouter,
 	paymentRouter,
 	paymentWebhookRouter,
 	notificationRouter,
 	productRouter,
+	reviewCommentRouter,
 	reviewRouter,
+	searchRouter,
+	supportTicketRouter,
+	ticketMessageRouter,
 	taskRouter,
 	unsubscribeRouter,
 	userRouter,
@@ -51,9 +56,14 @@ app.use("/api/products", productRouter)
 app.use("/api/images", imageRouter)
 app.use("/api/videos", videoRouter)
 app.use("/api/carts", cartRouter)
+app.use("/api/discounts", discountRouter)
 app.use("/api/orders", orderRouter)
 app.use("/api/payments", paymentRouter)
 app.use("/api/reviews", reviewRouter)
+app.use("/api/review-comments", reviewCommentRouter)
+app.use("/api/search", searchRouter)
+app.use("/api/tickets", supportTicketRouter)
+app.use("/api/ticket-messages", ticketMessageRouter)
 app.use("/api/tasks", taskRouter)
 app.use("/api/users", userRouter)
 app.use("/api/notifications", notificationRouter)

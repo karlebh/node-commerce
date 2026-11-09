@@ -39,10 +39,12 @@ export const createSessionAndToken = async (
 export type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
 const polymorphicResolvers = {
-	User: (tx: Tx, id: string) =>
+	USER: (tx: Tx, id: string) =>
 		tx.user.findUnique({ where: { id }, omit: { passwordHash: true } }),
-	Category: (tx: Tx, id: string) => tx.category.findUnique({ where: { id } }),
-	Product: (tx: Tx, id: string) => tx.product.findUnique({ where: { id } }),
+	POST: () => null,
+	CATEGORY: (tx: Tx, id: string) => tx.category.findUnique({ where: { id } }),
+	PRODUCT: (tx: Tx, id: string) => tx.product.findUnique({ where: { id } }),
+	REVIEW: (tx: Tx, id: string) => tx.review.findUnique({ where: { id } }),
 } as const
 
 export type PolymorphicType = keyof typeof polymorphicResolvers

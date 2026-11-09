@@ -41,6 +41,45 @@ vi.mock("../src/jobs/emailQueue.js", () => ({
 	emailQueue: { add: vi.fn() },
 }))
 
+vi.mock("../src/services/search/search.service.js", () => ({
+	searchService: {
+		driver: "null",
+		init: vi.fn(async () => {}),
+		search: vi.fn(async () => ({
+			query: "",
+			driver: "null",
+			page: 1,
+			perPage: 10,
+			total: 0,
+			hits: [],
+			byIndex: {
+				products: { index: "products", total: 0, hits: [] },
+				categories: { index: "categories", total: 0, hits: [] },
+				users: { index: "users", total: 0, hits: [] },
+				reviews: { index: "reviews", total: 0, hits: [] },
+			},
+		})),
+		indexDocuments: vi.fn(async () => {}),
+		removeDocuments: vi.fn(async () => {}),
+		clearIndex: vi.fn(async () => {}),
+		indexProduct: vi.fn(async () => {}),
+		removeProduct: vi.fn(async () => {}),
+		indexCategory: vi.fn(async () => {}),
+		removeCategory: vi.fn(async () => {}),
+		indexUser: vi.fn(async () => {}),
+		removeUser: vi.fn(async () => {}),
+		indexReview: vi.fn(async () => {}),
+		removeReview: vi.fn(async () => {}),
+		reindexAll: vi.fn(async () => ({
+			products: 0,
+			categories: 0,
+			users: 0,
+			reviews: 0,
+		})),
+	},
+	searchDriver: "null",
+}))
+
 vi.mock("../src/configs/multer.js", () => ({
 	UPLOAD_DIR: "/tmp/test-uploads",
 	uploader: {

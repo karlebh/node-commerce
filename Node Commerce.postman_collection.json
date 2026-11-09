@@ -8,7 +8,13 @@
   },
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
   },
   "event": [
     {
@@ -44,17 +50,30 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"username\": \"{{username}}\",\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"password_confirmation\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/auth/register",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             }
           }
         },
@@ -76,17 +95,30 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/auth/login",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -96,8 +128,14 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/auth/me",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "me"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
             }
           }
         },
@@ -107,8 +145,14 @@
             "method": "POST",
             "url": {
               "raw": "{{BASE_URL}}/api/auth/logout",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             }
           }
         },
@@ -116,49 +160,86 @@
           "name": "change password",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"current_password\": \"{{password}}\",\n    \"password\": \"Password456!\",\n    \"password_confirmation\": \"Password456!\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/auth/change-password",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "change-password"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ]
             }
           }
         },
         {
           "name": "reset password",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"email\": \"{{email}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/auth/reset-password",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "reset-password"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
             }
           }
         },
         {
           "name": "confirm password reset",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"token\": \"paste-reset-token-here\",\n    \"password\": \"NewPassword123!\",\n    \"password_confirmation\": \"NewPassword123!\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/auth/confirm-password-reset",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "auth", "confirm-password-reset"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "confirm-password-reset"
+              ]
             }
           }
         }
@@ -186,12 +267,27 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/users?page=1&perPage=10",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "users"],
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "perPage", "value": "10" },
-                { "key": "search", "value": "", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -202,8 +298,14 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/users/{{userId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "users", "{{userId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         }
@@ -228,15 +330,28 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/categories?page=1&perPage=20",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "categories"],
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "perPage", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -244,12 +359,20 @@
         {
           "name": "show",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/categories/{{categoryId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "categories", "{{categoryId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ]
             }
           }
         },
@@ -270,15 +393,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Category {{$timestamp}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/categories",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "categories"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
             }
           }
         },
@@ -286,15 +419,26 @@
           "name": "update",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Renamed Category {{$timestamp}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/categories/{{categoryId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "categories", "{{categoryId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ]
             }
           }
         },
@@ -304,8 +448,14 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/categories/{{categoryId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "categories", "{{categoryId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ]
             }
           }
         }
@@ -330,16 +480,33 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/products?page=1&perPage=10",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "products"],
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "perPage", "value": "10" },
-                { "key": "search", "value": "", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -347,12 +514,20 @@
         {
           "name": "show",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/products/{{productId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "products", "{{productId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
             }
           }
         },
@@ -373,15 +548,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Product {{$timestamp}}\",\n    \"description\": \"A descriptive sample product for API testing purposes.\",\n    \"price\": 250000,\n    \"stock\": 25,\n    \"imageUrl\": \"https://picsum.photos/seed/sample/400/400\",\n    \"categoryId\": \"{{categoryId}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/products",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "products"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
             }
           }
         },
@@ -389,15 +574,26 @@
           "name": "update",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Updated Product {{$timestamp}}\",\n    \"price\": 180000,\n    \"stock\": 10\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/products/{{productId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "products", "{{productId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
             }
           }
         },
@@ -407,8 +603,14 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/products/{{productId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "products", "{{productId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
             }
           }
         }
@@ -436,11 +638,22 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/carts?page=1&perPage=20",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "carts"],
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "carts"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "perPage", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -449,15 +662,25 @@
           "name": "add item",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 2\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/carts",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "carts"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "carts"
+              ]
             }
           }
         },
@@ -467,8 +690,14 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/carts/clear",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "carts", "clear"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "carts",
+                "clear"
+              ]
             }
           }
         },
@@ -478,8 +707,213 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/carts/{{cartItemId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "carts", "{{cartItemId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "carts",
+                "{{cartItemId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discounts",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const first = res.data?.[0]?.id;",
+                  "if (first) pm.collectionVariables.set('discountId', first);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts?page=1&perPage=20",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "show",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts/{{discountId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts",
+                "{{discountId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "create percentage",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.discount?.id;",
+                  "if (id) pm.collectionVariables.set('discountId', id);",
+                  "const code = res.data?.discount?.code;",
+                  "if (code) pm.collectionVariables.set('discountCode', code);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"code\": \"SAVE10_{{$timestamp}}\",\n    \"description\": \"10% off\",\n    \"type\": \"PERCENTAGE\",\n    \"value\": 10,\n    \"minOrderAmount\": 1000,\n    \"maxDiscountAmount\": 5000,\n    \"usageLimit\": 100\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "create fixed amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"code\": \"FLAT500_{{$timestamp}}\",\n    \"description\": \"Flat 500 off\",\n    \"type\": \"FIXED_AMOUNT\",\n    \"value\": 500\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"description\": \"Updated description\",\n    \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts/{{discountId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts",
+                "{{discountId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "apply to cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"code\": \"{{discountCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts/apply",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts",
+                "apply"
+              ]
+            }
+          }
+        },
+        {
+          "name": "destroy",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/api/discounts/{{discountId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "discounts",
+                "{{discountId}}"
+              ]
             }
           }
         }
@@ -507,12 +941,27 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/orders?page=1&perPage=10",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "orders"],
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "perPage", "value": "10" },
-                { "key": "status", "value": "", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -523,8 +972,14 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/orders/{{orderId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "orders", "{{orderId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
             }
           }
         },
@@ -546,14 +1001,28 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
             "url": {
               "raw": "{{BASE_URL}}/api/orders",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "orders"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
             }
           }
         },
@@ -561,15 +1030,26 @@
           "name": "update status",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"status\": \"SHIPPED\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/orders/{{orderId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "orders", "{{orderId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
             }
           }
         },
@@ -579,8 +1059,14 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/orders/{{orderId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "orders", "{{orderId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
             }
           }
         }
@@ -607,8 +1093,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -616,8 +1108,13 @@
             },
             "url": {
               "raw": "{{BASE_URL}}/api/payments",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "payments"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
             }
           }
         },
@@ -627,8 +1124,15 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/payments/verify/{{paymentRef}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "payments", "verify", "{{paymentRef}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "verify",
+                "{{paymentRef}}"
+              ]
             }
           }
         },
@@ -636,15 +1140,27 @@
           "name": "refund",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"amount\": 100000,\n    \"reason\": \"customer requested\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/payments/refund/{{paymentRef}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "payments", "refund", "{{paymentRef}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "refund",
+                "{{paymentRef}}"
+              ]
             }
           }
         }
@@ -670,15 +1186,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"productId\": \"{{productId}}\",\n    \"rating\": 5,\n    \"title\": \"Great product\",\n    \"body\": \"Exactly as described, arrived quickly.\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/reviews",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "reviews"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews"
+              ]
             }
           }
         },
@@ -686,15 +1212,26 @@
           "name": "update",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"productId\": \"{{productId}}\",\n    \"rating\": 4,\n    \"title\": \"Updated review\",\n    \"body\": \"Changed my mind slightly.\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/reviews/{{reviewId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "reviews", "{{reviewId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}"
+              ]
             }
           }
         },
@@ -704,8 +1241,183 @@
             "method": "DELETE",
             "url": {
               "raw": "{{BASE_URL}}/api/reviews/{{reviewId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "reviews", "{{reviewId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "list comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const first = res.data?.[0]?.id;",
+                  "if (first) pm.collectionVariables.set('reviewCommentId', first);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/reviews/{{reviewId}}/comments?page=1&perPage=20",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}",
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20"
+                },
+                {
+                  "key": "topLevelOnly",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "parentId",
+                  "value": "{{reviewCommentId}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "add comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.id;",
+                  "if (id) pm.collectionVariables.set('reviewCommentId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": \"Thanks for the review!\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/reviews/{{reviewId}}/comments",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}",
+                "comments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "reply to comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": \"Agreed!\",\n    \"parentId\": \"{{reviewCommentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/reviews/{{reviewId}}/comments",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}",
+                "comments"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Review Comments",
+      "item": [
+        {
+          "name": "update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": \"Edited comment text.\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/review-comments/{{reviewCommentId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "review-comments",
+                "{{reviewCommentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "destroy",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/api/review-comments/{{reviewCommentId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "review-comments",
+                "{{reviewCommentId}}"
+              ]
             }
           }
         }
@@ -715,7 +1427,7 @@
       "name": "Images",
       "item": [
         {
-          "name": "upload",
+          "name": "upload (product)",
           "event": [
             {
               "listen": "test",
@@ -734,15 +1446,81 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": [] },
-                { "key": "imageableType", "value": "PRODUCT", "type": "text" },
-                { "key": "imageableId", "value": "{{productId}}", "type": "text" }
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "imageableType",
+                  "value": "PRODUCT",
+                  "type": "text"
+                },
+                {
+                  "key": "imageableId",
+                  "value": "{{productId}}",
+                  "type": "text"
+                }
               ]
             },
             "url": {
               "raw": "{{BASE_URL}}/api/images",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "images"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "images"
+              ]
+            }
+          }
+        },
+        {
+          "name": "upload (review)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.image?.id;",
+                  "if (id) pm.collectionVariables.set('imageId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "imageableType",
+                  "value": "REVIEW",
+                  "type": "text"
+                },
+                {
+                  "key": "imageableId",
+                  "value": "{{reviewId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/images",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "images"
+              ]
             }
           }
         },
@@ -750,15 +1528,465 @@
           "name": "destroy",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"id\": \"{{imageId}}\"\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/images/{{imageId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "images", "{{imageId}}"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "images",
+                "{{imageId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "item": [
+        {
+          "name": "upload (product)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.video?.id;",
+                  "if (id) pm.collectionVariables.set('videoId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "videoableType",
+                  "value": "PRODUCT",
+                  "type": "text"
+                },
+                {
+                  "key": "videoableId",
+                  "value": "{{productId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "durationMs",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/videos",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "videos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "upload (review)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.video?.id;",
+                  "if (id) pm.collectionVariables.set('videoId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "videoableType",
+                  "value": "REVIEW",
+                  "type": "text"
+                },
+                {
+                  "key": "videoableId",
+                  "value": "{{reviewId}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/videos",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "videos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "destroy",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/api/videos/{{videoId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "videos",
+                "{{videoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "index",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets?page=1&perPage=12",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "12"
+                },
+                {
+                  "key": "role",
+                  "value": "requester",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.id;",
+                  "if (id) pm.collectionVariables.set('ticketId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"vendorId\": \"{{vendorId}}\",\n    \"orderId\": \"{{orderId}}\",\n    \"productId\": \"{{productId}}\",\n    \"subject\": \"Order never arrived\",\n    \"body\": \"My order shows delivered but I did not receive it.\",\n    \"priority\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "show",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "update status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"PENDING\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "update priority (vendor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"priority\": \"URGENT\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "close",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"CLOSED\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "destroy",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "list messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}/messages?page=1&perPage=20",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "add message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data?.id;",
+                  "if (id) pm.collectionVariables.set('ticketMessageId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": \"Any update on this?\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/tickets/{{ticketId}}/messages",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tickets",
+                "{{ticketId}}",
+                "messages"
+              ]
+            }
+          }
+        },
+        {
+          "name": "edit message",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": \"Edited message body.\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ticket-messages/{{ticketMessageId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "ticket-messages",
+                "{{ticketMessageId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "delete message",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/api/ticket-messages/{{ticketMessageId}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "ticket-messages",
+                "{{ticketMessageId}}"
+              ]
             }
           }
         }
@@ -773,8 +2001,240 @@
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/api/tasks",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "tasks"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "tasks"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "description": "Mega search across products, categories, users and reviews. The active engine is chosen by the SEARCH_DRIVER env var (postgres | meilisearch | elasticsearch | null).",
+      "item": [
+        {
+          "name": "search (all indexes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('has data envelope', () => pm.expect(res).to.have.property('data'));",
+                  "pm.test('reports active driver', () => pm.expect(res.data).to.have.property('driver'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q={{searchQuery}}&page=1&perPage=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{searchQuery}}",
+                  "description": "Required. 1-200 chars, trimmed."
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "10",
+                  "description": "1-50"
+                }
+              ]
+            },
+            "description": "Searches every index at once. Response contains `hits[]` (flat across indexes) plus `byIndex` broken down into products/categories/users/reviews."
+          }
+        },
+        {
+          "name": "search products only",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q={{searchQuery}}&indexes=products",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{searchQuery}}"
+                },
+                {
+                  "key": "indexes",
+                  "value": "products",
+                  "description": "Comma-separated. One or more of: products, categories, users, reviews."
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "search products + reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q={{searchQuery}}&indexes=products,reviews&perPage=25",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{searchQuery}}"
+                },
+                {
+                  "key": "indexes",
+                  "value": "products,reviews"
+                },
+                {
+                  "key": "perPage",
+                  "value": "25"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "search users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q={{searchQuery}}&indexes=users",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{searchQuery}}"
+                },
+                {
+                  "key": "indexes",
+                  "value": "users"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "search categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q={{searchQuery}}&indexes=categories",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{searchQuery}}"
+                },
+                {
+                  "key": "indexes",
+                  "value": "categories"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "validation: empty q (expect 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('422 validation error', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ]
+            },
+            "description": "`q` is required. The server returns 422 when it is missing or blank."
+          }
+        },
+        {
+          "name": "validation: unknown index (expect 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('422 validation error', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/search?q=shoes&indexes=bogus",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "shoes"
+                },
+                {
+                  "key": "indexes",
+                  "value": "bogus"
+                }
+              ]
             }
           }
         }
@@ -786,12 +2246,18 @@
         {
           "name": "healthcheck",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "url": {
               "raw": "{{BASE_URL}}/health",
-              "host": ["{{BASE_URL}}"],
-              "path": ["health"]
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           }
         }
@@ -799,19 +2265,93 @@
     }
   ],
   "variable": [
-    { "key": "BASE_URL", "value": "http://localhost:3000" },
-    { "key": "email", "value": "karleboluwi@gmail.com" },
-    { "key": "username", "value": "Caleba" },
-    { "key": "password", "value": "Password123!" },
-    { "key": "token", "value": "" },
-    { "key": "userId", "value": "" },
-    { "key": "categoryId", "value": "" },
-    { "key": "productId", "value": "" },
-    { "key": "cartItemId", "value": "" },
-    { "key": "orderId", "value": "" },
-    { "key": "paymentRef", "value": "" },
-    { "key": "reviewId", "value": "" },
-    { "key": "imageId", "value": "" },
-    { "key": "idempotencyKey", "value": "" }
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "email",
+      "value": "karleboluwi@gmail.com"
+    },
+    {
+      "key": "username",
+      "value": "Caleba"
+    },
+    {
+      "key": "password",
+      "value": "Password123!"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "cartItemId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "paymentRef",
+      "value": ""
+    },
+    {
+      "key": "reviewId",
+      "value": ""
+    },
+    {
+      "key": "reviewCommentId",
+      "value": ""
+    },
+    {
+      "key": "imageId",
+      "value": ""
+    },
+    {
+      "key": "videoId",
+      "value": ""
+    },
+    {
+      "key": "idempotencyKey",
+      "value": ""
+    },
+    {
+      "key": "discountId",
+      "value": ""
+    },
+    {
+      "key": "discountCode",
+      "value": ""
+    },
+    {
+      "key": "ticketId",
+      "value": ""
+    },
+    {
+      "key": "ticketMessageId",
+      "value": ""
+    },
+    {
+      "key": "vendorId",
+      "value": ""
+    },
+    {
+      "key": "searchQuery",
+      "value": "shoes"
+    }
   ]
 }

@@ -7,14 +7,19 @@ import * as githubOauth from "../controllers/oauth/github.controller.js"
 import * as passwordController from "../controllers/auth/password.controller.js"
 import * as imageController from "../controllers/image.controller.js"
 import * as cartController from "../controllers/cart.controller.js"
+import * as discountController from "../controllers/discount.controller.js"
 import * as orderController from "../controllers/order.controller.js"
 import * as notificationController from "../controllers/notification.controller.js"
 import * as paymentController from "../controllers/payment.controller.js"
 import * as reviewController from "../controllers/review.controller.js"
+import * as reviewCommentController from "../controllers/review-comment.controller.js"
+import * as supportTicketController from "../controllers/support-ticket.controller.js"
+import * as ticketMessageController from "../controllers/ticket-message.controller.js"
 import * as TaskController from "../controllers/task.controllers.js"
 import * as unsubscribeController from "../controllers/unsubscribe.controller.js"
 import * as userController from "../controllers/user.controller.js"
 import * as videoController from "../controllers/video.controller.js"
+import * as searchController from "../controllers/search.controller.js"
 import { asyncHandler } from "../middleware/asyncHandler.js"
 import { protectedHandler } from "../middleware/protectedHandler.js"
 import { requiresOwnership } from "../middleware/requiresOwnership.js"
@@ -169,6 +174,55 @@ export const reviewRouter = Router()
 reviewRouter.post("/", protectedHandler(reviewController.store))
 reviewRouter.patch("/:id", protectedHandler(reviewController.update))
 reviewRouter.delete("/:id", protectedHandler(reviewController.destroy))
+reviewRouter.get(
+	"/:reviewId/comments",
+	protectedHandler(reviewCommentController.index)
+)
+reviewRouter.post(
+	"/:reviewId/comments",
+	protectedHandler(reviewCommentController.store)
+)
+
+export const reviewCommentRouter = Router()
+reviewCommentRouter.patch(
+	"/:id",
+	protectedHandler(reviewCommentController.update)
+)
+reviewCommentRouter.delete(
+	"/:id",
+	protectedHandler(reviewCommentController.destroy)
+)
+
+export const supportTicketRouter = Router()
+supportTicketRouter.get("/", protectedHandler(supportTicketController.index))
+supportTicketRouter.post("/", protectedHandler(supportTicketController.store))
+supportTicketRouter.get("/:id", protectedHandler(supportTicketController.show))
+supportTicketRouter.patch(
+	"/:id",
+	protectedHandler(supportTicketController.update)
+)
+supportTicketRouter.delete(
+	"/:id",
+	protectedHandler(supportTicketController.destroy)
+)
+supportTicketRouter.get(
+	"/:ticketId/messages",
+	protectedHandler(ticketMessageController.index)
+)
+supportTicketRouter.post(
+	"/:ticketId/messages",
+	protectedHandler(ticketMessageController.store)
+)
+
+export const ticketMessageRouter = Router()
+ticketMessageRouter.patch(
+	"/:id",
+	protectedHandler(ticketMessageController.update)
+)
+ticketMessageRouter.delete(
+	"/:id",
+	protectedHandler(ticketMessageController.destroy)
+)
 
 export const taskRouter = Router()
 taskRouter.get("/", protectedHandler(TaskController.index))
@@ -191,6 +245,35 @@ notificationRouter.delete(
 	"/:id",
 	protectedHandler(notificationController.destroy)
 )
+
+export const discountRouter = Router()
+discountRouter.get("/", protectedHandler(discountController.index))
+discountRouter.post("/apply", protectedHandler(discountController.apply))
+discountRouter.get(
+	"/:id",
+	protectedHandler(
+		discountController.show,
+		requiresOwnership(prisma.discount)
+	)
+)
+discountRouter.post("/", protectedHandler(discountController.store))
+discountRouter.patch(
+	"/:id",
+	protectedHandler(
+		discountController.update,
+		requiresOwnership(prisma.discount)
+	)
+)
+discountRouter.delete(
+	"/:id",
+	protectedHandler(
+		discountController.destroy,
+		requiresOwnership(prisma.discount)
+	)
+)
+
+export const searchRouter = Router()
+searchRouter.get("/", asyncHandler(searchController.index))
 
 export const unsubscribeRouter = Router()
 unsubscribeRouter.get(

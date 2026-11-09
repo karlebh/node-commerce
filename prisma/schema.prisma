@@ -27,10 +27,15 @@ model User {
   cart             Cart?
   orders           Order[]
   review           Review[]
+  reviewComments   ReviewComment[]
   idempotencyKeys  IdempotencyKey[]
   payments         Payment[]
   tasks            Task[]
   newsletterSends  NewsletterSend[]
+  discounts        Discount[]
+  supportTickets   SupportTicket[]  @relation("TicketRequester")
+  vendorTickets    SupportTicket[]  @relation("TicketVendor")
+  ticketMessages   TicketMessage[]
 
   @@map("users")
 }
@@ -104,6 +109,7 @@ enum ImageableType {
   POST
   PRODUCT
   CATEGORY
+  REVIEW
 }
 
 model Image {
@@ -233,13 +239,35 @@ model Review {
   updatedAt          DateTime @updatedAt
   deletedAt          DateTime?
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user     User            @relation(fields: [userId], references: [id])
+  product  Product         @relation(fields: [productId], references: [id])
+  comments ReviewComment[]
 
   @@unique([userId, productId])
   @@index([productId, isApproved, createdAt])
   @@index([productId, isApproved, rating])
   @@map("reviews")
+}
+
+model ReviewComment {
+  id        String    @id @default(uuid())
+  reviewId  String
+  userId    String
+  parentId  String?
+  body      String    @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  review  Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  ReviewComment?  @relation("ReviewCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies ReviewComment[] @relation("ReviewCommentReplies")
+
+  @@index([reviewId, createdAt])
+  @@index([parentId])
+  @@index([userId])
+  @@map("review_comments")
 }
 
 enum OauthProviders {
@@ -416,6 +444,7 @@ enum VideoableType {
   POST
   PRODUCT
   CATEGORY
+  REVIEW
 }
 
 model Video {
@@ -446,7 +475,95 @@ enum NotificationType {
   PAYMENT_FAILED
   PAYMENT_REFUNDED
   REVIEW_RECEIVED
+  TICKET_OPENED
+  TICKET_REPLIED
+  TICKET_STATUS_CHANGED
   GENERIC
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id          String         @id @default(uuid())
+  userId      String
+  vendorId    String?
+  orderId     String?
+  productId   String?
+  subject     String         @db.VarChar(200)
+  body        String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(NORMAL)
+  closedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  user     User            @relation("TicketRequester", fields: [userId], references: [id], onDelete: Cascade)
+  vendor   User?           @relation("TicketVendor", fields: [vendorId], references: [id])
+  messages TicketMessage[]
+
+  @@index([userId, status, createdAt])
+  @@index([vendorId, status, createdAt])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id        String    @id @default(uuid())
+  ticketId  String
+  userId    String
+  body      String    @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@index([userId])
+  @@map("ticket_messages")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model Discount {
+  id                String       @id @default(uuid())
+  code              String       @unique
+  description       String?
+  type              DiscountType
+  value             Int
+  minOrderAmount    Int?
+  maxDiscountAmount Int?
+  usageLimit        Int?
+  usedCount         Int          @default(0)
+  startsAt          DateTime?
+  expiresAt         DateTime?
+  isActive          Boolean      @default(true)
+  userId            String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive, expiresAt])
+  @@map("discounts")
 }
 
 model Notification {
