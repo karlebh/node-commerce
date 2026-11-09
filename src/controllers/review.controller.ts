@@ -2,7 +2,7 @@ import type {
 	AuthenticatedHandler,
 	AuthenticatedRequest,
 } from "../middleware/protectedHandler.js"
-import type { Response } from "express"
+import type { Request, RequestHandler, Response } from "express"
 import {
 	createReviewSchema,
 	destroyReviewSchema,
@@ -10,6 +10,35 @@ import {
 } from "../validations/review.schema.js"
 import { prisma } from "../database/prisma.js"
 import { AppError } from "../errors/AppError.js"
+import { paginate } from "../lib/paginate.js"
+import { urlQuerySchema } from "../validations/url-query.schema.js"
+import { getProductReviews } from "../services/review.service.js"
+import { ImageableType, VideoableType } from "@prisma/client"
+import z from "zod"
+
+export const productReviews: RequestHandler = async (
+	request: Request,
+	response: Response
+): Promise<Response> => {
+	const { page, perPage } = urlQuerySchema.parse(request.query)
+	const { id } = z.object({ id: z.uuid() }).parse(request.params)
+
+	const { reviews, reviewsCount } = await getProductReviews({
+		productId: id,
+		page,
+		perPage,
+	})
+
+	return response.status(200).json(
+		paginate({
+			request,
+			data: reviews,
+			total: reviewsCount,
+			page,
+			perPage,
+		})
+	)
+}
 
 export const store: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
@@ -30,7 +59,9 @@ export const store: AuthenticatedHandler = async (
 		},
 	})
 
-	return response.status(201).json({ review })
+	return response
+		.status(201)
+		.json({ review: { ...review, images: [], videos: [] } })
 }
 
 export const update: AuthenticatedHandler = async (
@@ -52,7 +83,22 @@ export const update: AuthenticatedHandler = async (
 		data: { productId, rating, title, body },
 	})
 
-	return response.status(200).json({ review })
+	const [images, videos] = await Promise.all([
+		prisma.image.findMany({
+			where: {
+				imageableType: ImageableType.REVIEW,
+				imageableId: review.id,
+			},
+		}),
+		prisma.video.findMany({
+			where: {
+				videoableType: VideoableType.REVIEW,
+				videoableId: review.id,
+			},
+		}),
+	])
+
+	return response.status(200).json({ review: { ...review, images, videos } })
 }
 
 export const destroy: AuthenticatedHandler = async (

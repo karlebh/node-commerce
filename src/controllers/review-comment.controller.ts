@@ -13,6 +13,7 @@ import {
 	reviewIdParamSchema,
 	updateReviewCommentSchema,
 } from "../validations/review-comment.schema.js"
+import { CommentableType, ImageableType, VideoableType } from "@prisma/client"
 
 export const index: AuthenticatedHandler = async (
 	request: AuthenticatedRequest,
@@ -23,14 +24,15 @@ export const index: AuthenticatedHandler = async (
 		indexReviewCommentsSchema.parse(request.query)
 
 	const where = {
-		reviewId,
+		commentableId: reviewId,
+		commentableType: CommentableType.REVIEW,
 		deletedAt: null,
 		...(topLevelOnly ? { parentId: null } : {}),
 		...(parentId ? { parentId } : {}),
 	}
 
 	const [comments, total] = await Promise.all([
-		prisma.reviewComment.findMany({
+		prisma.comment.findMany({
 			where,
 			skip: (page - 1) * perPage,
 			take: perPage,
@@ -39,13 +41,37 @@ export const index: AuthenticatedHandler = async (
 				_count: { select: { replies: true } },
 			},
 		}),
-		prisma.reviewComment.count({ where }),
+		prisma.comment.count({ where }),
 	])
+
+	const commentIds = comments.map((comment) => comment.id)
+	const [images, videos] = commentIds.length
+		? await Promise.all([
+				prisma.image.findMany({
+					where: {
+						imageableType: ImageableType.COMMENT,
+						imageableId: { in: commentIds },
+					},
+				}),
+				prisma.video.findMany({
+					where: {
+						videoableType: VideoableType.COMMENT,
+						videoableId: { in: commentIds },
+					},
+				}),
+			])
+		: [[], []]
+
+	const data = comments.map((comment) => ({
+		...comment,
+		images: images.filter((image) => image.imageableId === comment.id),
+		videos: videos.filter((video) => video.videoableId === comment.id),
+	}))
 
 	return response.status(200).json(
 		paginate({
 			request,
-			data: comments,
+			data,
 			total,
 			page,
 			perPage,
@@ -69,25 +95,37 @@ export const store: AuthenticatedHandler = async (
 	}
 
 	if (parentId) {
-		const parent = await prisma.reviewComment.findUnique({
+		const parent = await prisma.comment.findUnique({
 			where: { id: parentId },
-			select: { reviewId: true, deletedAt: true },
+			select: {
+				commentableId: true,
+				commentableType: true,
+				deletedAt: true,
+			},
 		})
-		if (!parent || parent.deletedAt || parent.reviewId !== reviewId) {
+		if (
+			!parent ||
+			parent.deletedAt ||
+			parent.commentableType !== CommentableType.REVIEW ||
+			parent.commentableId !== reviewId
+		) {
 			throw new AppError(404, "Parent comment not found")
 		}
 	}
 
-	const comment = await prisma.reviewComment.create({
+	const comment = await prisma.comment.create({
 		data: {
-			reviewId,
+			commentableId: reviewId,
+			commentableType: CommentableType.REVIEW,
 			userId: request.userId,
 			body,
 			...(parentId && { parentId }),
 		},
 	})
 
-	return response.status(201).json({ data: comment })
+	return response
+		.status(201)
+		.json({ data: { ...comment, images: [], videos: [] } })
 }
 
 export const update: AuthenticatedHandler = async (
@@ -97,7 +135,7 @@ export const update: AuthenticatedHandler = async (
 	const { id } = commentIdParamSchema.parse(request.params)
 	const { body } = updateReviewCommentSchema.parse(request.body)
 
-	const existing = await prisma.reviewComment.findUnique({ where: { id } })
+	const existing = await prisma.comment.findUnique({ where: { id } })
 	if (!existing || existing.deletedAt) {
 		throw new AppError(404, "Comment not found")
 	}
@@ -105,12 +143,27 @@ export const update: AuthenticatedHandler = async (
 		throw new AppError(404, "Comment not found")
 	}
 
-	const comment = await prisma.reviewComment.update({
+	const comment = await prisma.comment.update({
 		where: { id },
 		data: { body },
 	})
 
-	return response.status(200).json({ data: comment })
+	const [images, videos] = await Promise.all([
+		prisma.image.findMany({
+			where: {
+				imageableType: ImageableType.COMMENT,
+				imageableId: comment.id,
+			},
+		}),
+		prisma.video.findMany({
+			where: {
+				videoableType: VideoableType.COMMENT,
+				videoableId: comment.id,
+			},
+		}),
+	])
+
+	return response.status(200).json({ data: { ...comment, images, videos } })
 }
 
 export const destroy: AuthenticatedHandler = async (
@@ -119,7 +172,7 @@ export const destroy: AuthenticatedHandler = async (
 ): Promise<Response> => {
 	const { id } = commentIdParamSchema.parse(request.params)
 
-	const existing = await prisma.reviewComment.findUnique({ where: { id } })
+	const existing = await prisma.comment.findUnique({ where: { id } })
 	if (!existing || existing.deletedAt) {
 		throw new AppError(404, "Comment not found")
 	}
@@ -127,7 +180,7 @@ export const destroy: AuthenticatedHandler = async (
 		throw new AppError(404, "Comment not found")
 	}
 
-	await prisma.reviewComment.update({
+	await prisma.comment.update({
 		where: { id },
 		data: { deletedAt: new Date() },
 	})

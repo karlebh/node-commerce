@@ -27,7 +27,7 @@ model User {
   cart             Cart?
   orders           Order[]
   review           Review[]
-  reviewComments   ReviewComment[]
+  comments         Comment[]
   idempotencyKeys  IdempotencyKey[]
   payments         Payment[]
   tasks            Task[]
@@ -110,6 +110,7 @@ enum ImageableType {
   PRODUCT
   CATEGORY
   REVIEW
+  COMMENT
 }
 
 model Image {
@@ -241,7 +242,6 @@ model Review {
 
   user     User            @relation(fields: [userId], references: [id])
   product  Product         @relation(fields: [productId], references: [id])
-  comments ReviewComment[]
 
   @@unique([userId, productId])
   @@index([productId, isApproved, createdAt])
@@ -249,25 +249,32 @@ model Review {
   @@map("reviews")
 }
 
-model ReviewComment {
-  id        String    @id @default(uuid())
-  reviewId  String
-  userId    String
-  parentId  String?
-  body      String    @db.Text
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+enum CommentableType {
+  COMMENT
+  POST
+  PRODUCT
+  REVIEW
+}
 
-  review  Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent  ReviewComment?  @relation("ReviewCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies ReviewComment[] @relation("ReviewCommentReplies")
+model Comment {
+  id              String          @id @default(uuid())
+  userId          String
+  parentId        String?
+  commentableId   String
+  commentableType CommentableType
+  body            String          @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
 
-  @@index([reviewId, createdAt])
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([commentableType, commentableId, createdAt])
   @@index([parentId])
   @@index([userId])
-  @@map("review_comments")
+  @@map("comments")
 }
 
 enum OauthProviders {
@@ -445,6 +452,7 @@ enum VideoableType {
   PRODUCT
   CATEGORY
   REVIEW
+  COMMENT
 }
 
 model Video {

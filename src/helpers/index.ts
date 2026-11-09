@@ -45,6 +45,7 @@ const polymorphicResolvers = {
 	CATEGORY: (tx: Tx, id: string) => tx.category.findUnique({ where: { id } }),
 	PRODUCT: (tx: Tx, id: string) => tx.product.findUnique({ where: { id } }),
 	REVIEW: (tx: Tx, id: string) => tx.review.findUnique({ where: { id } }),
+	COMMENT: (tx: Tx, id: string) => tx.comment.findUnique({ where: { id } }),
 } as const
 
 export type PolymorphicType = keyof typeof polymorphicResolvers
